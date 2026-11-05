@@ -1,0 +1,1893 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FloraSense Web App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F0; --card:#FFFFFF; --ink:#17221B; --muted:#4E5B52; --faint:#9AA79D;
+  --line:#DCE3D9; --line2:#C5CFC2; --green:#1F5C3A; --green2:#2E7A50; --mint:#E3EFE6;
+  --dry:#A8432E; --dry-bg:#F8E5DF; --cold:#2F5E8C; --cold-bg:#E1EBF5;
+  --wet:#6B4FA0; --wet-bg:#ECE6F6; --warm:#A86A00; --warm-bg:#FBEFD9;
+  --ok:#1F5C3A; --ok-bg:#E3EFE6;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;
+  --body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body)}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.01em;margin:0}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:20;background:rgba(243,245,240,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1240px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:18px}
+.brand i{width:26px;height:26px;border-radius:8px;background:var(--green);display:grid;place-items:center}
+.seg{display:flex;background:#E6EBE3;border-radius:999px;padding:3px;margin-left:auto}
+.seg button{border:0;background:none;padding:7px 16px;border-radius:999px;font-weight:500;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--line2);border-radius:999px;padding:3px 10px}
+main{max-width:1240px;margin:0 auto;padding:24px 16px 64px}
+.view{display:none}.view.on{display:block}
+
+/* ---------- app view ---------- */
+.app-grid{display:grid;grid-template-columns:400px 1fr;gap:32px;align-items:start}
+@media (max-width:900px){.app-grid{grid-template-columns:1fr}}
+.phone{width:100%;max-width:390px;height:780px;margin:0 auto;background:var(--bg);border:10px solid #1B241E;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 20px 50px rgba(23,34,27,.18);display:flex;flex-direction:column}
+.status{height:34px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-size:12px;font-weight:700}
+.screen{flex:1;overflow-y:auto;padding:8px 18px 18px}
+.screen::-webkit-scrollbar{width:0}
+.tabbar{flex:none;display:flex;border-top:1px solid var(--line);background:var(--card);padding:6px 4px 14px}
+.tabbar button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--faint);padding:6px 0;position:relative}
+.tabbar button.on{color:var(--green);font-weight:700}
+.tabbar svg{width:22px;height:22px}
+.badge{position:absolute;top:2px;right:calc(50% - 18px);background:var(--dry);color:#fff;font-size:10px;border-radius:999px;min-width:16px;height:16px;line-height:16px;padding:0 4px}
+
+.eyebrow{font-size:12px;color:var(--muted)}
+.h-scr{font-size:28px;font-weight:700;margin:2px 0 14px}
+.card{background:var(--card);border-radius:18px;padding:14px;margin-bottom:10px}
+.banner{background:var(--dry-bg);border-radius:16px;padding:12px 14px;margin-bottom:14px;cursor:pointer}
+.banner b{display:block;color:var(--dry)}
+.banner span{font-size:13px;color:var(--muted)}
+.banner.ok{background:var(--ok-bg)}.banner.ok b{color:var(--ok)}
+.row-sum{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:4px 2px 8px}
+.plant{display:block;width:100%;text-align:left;border:0;background:var(--card);border-radius:18px;padding:14px;margin-bottom:10px}
+.plant-top{display:flex;justify-content:space-between;align-items:start;gap:8px}
+.plant-name{font-weight:700;font-size:16px}
+.plant-room{font-size:12px;color:var(--muted)}
+.pill{font-size:11px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.s-ok{background:var(--ok-bg);color:var(--ok)}.s-dry{background:var(--dry-bg);color:var(--dry)}
+.s-cold{background:var(--cold-bg);color:var(--cold)}.s-wet{background:var(--wet-bg);color:var(--wet)}
+.s-warm{background:var(--warm-bg);color:var(--warm)}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.metric small{display:block;font-size:11px;color:var(--muted)}
+.metric strong{font-family:var(--display);font-size:20px}
+.bar{height:5px;border-radius:5px;background:#EDF1EA;position:relative;margin-top:4px}
+.bar .band{position:absolute;top:0;bottom:0;background:var(--line2);border-radius:5px}
+.bar .dot{position:absolute;top:-3px;width:11px;height:11px;border-radius:50%;border:2px solid #fff;transform:translateX(-50%)}
+
+.back{border:0;background:var(--card);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;margin-bottom:10px}
+.big{font-family:var(--display);font-size:34px;font-weight:700;line-height:1.1}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--muted);margin:4px 0}
+.legend i{display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.coachbox{background:#1B3A28;color:#E9F2EB;border-radius:18px;padding:14px;margin-bottom:10px}
+.coachbox small{color:#A9C7B3;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.coachbox p{margin:6px 0 8px;font-size:14px}
+.coachbox button{border:0;background:none;color:#fff;font-weight:700;padding:0}
+.btn{border:0;border-radius:999px;padding:13px 18px;font-weight:700;width:100%;background:var(--green);color:#fff}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-sm{border:1px solid var(--line2);background:var(--card);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:500}
+
+.chat{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+.msg{max-width:88%;border-radius:18px;padding:10px 13px;font-size:14px}
+.msg.me{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:6px}
+.msg.ai{align-self:flex-start;background:var(--card);border-bottom-left-radius:6px}
+.msg.ai em{display:block;font-style:normal;font-size:11px;color:var(--faint);margin-top:6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chips button{border:1px solid var(--line2);background:var(--card);border-radius:999px;padding:6px 11px;font-size:12px}
+.ask{display:flex;gap:6px;position:sticky;bottom:0;background:var(--bg);padding-top:6px}
+.ask input{flex:1;border:1px solid var(--line2);border-radius:999px;padding:10px 14px;background:var(--card);min-width:0}
+.ask button{border:0;background:var(--green);color:#fff;border-radius:999px;padding:0 16px;font-weight:700}
+.context{font-size:12px;color:var(--muted);background:var(--mint);border-radius:12px;padding:8px 10px}
+.premium{font-size:11px;font-weight:700;background:#F4E7C2;color:#7A5A00;border-radius:999px;padding:2px 8px}
+
+.steps{display:flex;gap:6px;margin:12px 0 16px}.steps i{flex:1;height:4px;border-radius:4px;background:var(--line)}.steps i.on{background:var(--green)}
+.field{width:100%;border:1px solid var(--line2);border-radius:14px;padding:12px 14px;background:var(--card);margin:4px 0 12px}
+.opt{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:8px}
+.opt.on{border:1.5px solid var(--green);background:var(--mint)}
+.opt small{display:block;font-size:12px;color:var(--muted)}
+.radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--line2);flex:none}
+.opt.on .radio{border-color:var(--green);background:radial-gradient(var(--green) 40%,transparent 45%)}
+.qr{aspect-ratio:1;border-radius:24px;background:#1B241E;display:grid;place-items:center;margin:8px 0 16px;position:relative;overflow:hidden}
+.qr::after{content:"";position:absolute;left:12%;right:12%;height:2px;background:#7BD39A;box-shadow:0 0 12px #7BD39A;animation:scan 2s ease-in-out infinite}
+@keyframes scan{0%,100%{top:15%}50%{top:85%}}
+.setrow{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.setrow:last-child{border:0}
+.switch{width:44px;height:26px;border-radius:999px;background:var(--line2);border:0;position:relative;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+.switch.on{background:var(--green)}.switch.on::after{left:21px}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
+
+/* side panel */
+.panel{background:var(--card);border-radius:22px;padding:22px}
+.panel h2{font-size:22px;margin-bottom:4px}
+.panel p{color:var(--muted);margin:0 0 16px}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.ctrls .btn{width:auto;padding:10px 16px}
+.clock{font-family:var(--display);font-size:20px;margin-bottom:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}
+.kpi{background:var(--bg);border-radius:14px;padding:12px}
+.kpi small{color:var(--muted);font-size:12px;display:block}
+.kpi strong{font-family:var(--display);font-size:22px}
+.log{font-size:13px;max-height:220px;overflow:auto;border-top:1px solid var(--line);padding-top:8px}
+.log div{padding:4px 0;border-bottom:1px dashed var(--line);color:var(--muted)}
+.log b{color:var(--ink);font-weight:500}
+
+/* ---------- portfolio ---------- */
+.pf{display:grid;grid-template-columns:240px minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:900px){.pf{grid-template-columns:1fr}.toc{position:static!important;display:flex;overflow-x:auto;gap:4px}.toc a{white-space:nowrap}}
+.toc{position:sticky;top:80px;background:var(--card);border-radius:18px;padding:10px}
+.toc a{display:block;padding:7px 10px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:14px}
+.toc a.on,.toc a:hover{background:var(--mint);color:var(--green)}
+.doc section{background:var(--card);border-radius:22px;padding:26px;margin-bottom:18px;scroll-margin-top:80px}
+.doc h2{font-size:26px;margin-bottom:6px}
+.doc h3{font-size:17px;margin:22px 0 8px}
+.doc .lead{color:var(--muted);font-size:16px;margin:0 0 8px}
+.doc p{margin:8px 0}
+.tw{overflow-x:auto;margin:6px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line2);padding:8px 10px 6px 0}
+td{border-bottom:1px solid var(--line);padding:8px 10px 8px 0;vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.neg{color:var(--dry)}.pos{color:var(--green)}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.mini{background:var(--bg);border-radius:14px;padding:14px}
+.mini b{display:block;font-family:var(--display);font-size:22px}
+.mini span{font-size:13px;color:var(--muted)}
+.quote{font-family:var(--display);font-size:24px;line-height:1.25;color:var(--green);margin:10px 0}
+.timeline{display:flex;flex-direction:column;gap:0;margin:8px 0}
+.tl{display:grid;grid-template-columns:28px 1fr;gap:10px}
+.tl i{width:12px;height:12px;border-radius:50%;background:var(--green);margin:6px auto 0;position:relative}
+.tl i::after{content:"";position:absolute;left:5px;top:14px;width:2px;height:38px;background:var(--line2)}
+.tl:last-child i::after{display:none}
+.tl div{padding-bottom:12px}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.swot div{border-radius:14px;padding:14px;font-size:14px}
+.chk{list-style:none;padding:0;margin:6px 0}
+.chk li{padding:5px 0 5px 28px;position:relative}
+.chk li::before{content:"";position:absolute;left:0;top:7px;width:18px;height:18px;border-radius:6px;background:var(--mint);border:1.5px solid var(--green)}
+.chk li.done::before{background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E") center/14px no-repeat}
+pre{background:#17221B;color:#DDEBE1;border-radius:14px;padding:16px;overflow-x:auto;font-size:13px;line-height:1.5;white-space:pre-wrap}
+.note{font-size:12px;color:var(--muted)}
+.chart{width:100%;height:auto;display:block}
+.chart text{font-family:var(--body);fill:var(--muted);font-size:11px}
+
+/* website */
+.site-frame{width:100%;height:calc(100vh - 140px);min-height:600px;border:1px solid var(--line);border-radius:18px;background:#fff}
+
+/* ---------- shared app components (dark colours live in app-theme.css) ---------- */
+:root{--on-green:#fff;--hover:#fff;--tip-bg:#17221B;--tip-ink:#fff;--coach-bg:#1B3A28;--coach-ink:#E9F2EB;--coach-sub:#A9C7B3}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:8px;z-index:100;background:var(--card);color:var(--ink);padding:8px 14px;border-radius:10px}
+.skip:focus{left:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.btn{color:var(--on-green)}
+.msg.me{color:var(--on-green)}
+.bar .dot{border-color:var(--card)}
+.coachbox{background:var(--coach-bg);color:var(--coach-ink)}
+.coachbox small{color:var(--coach-sub)}
+.coachbox button{color:var(--coach-ink)}
+.field,select.field,textarea.field{background:var(--card);color:var(--ink)}
+.premium{background:#F4E7C2;color:#7A5A00}
+
+.notes{white-space:pre-wrap;font-size:14px;color:var(--ink);margin:6px 0 0}
+.msg img{display:block;max-width:180px;border-radius:12px;margin-bottom:6px}
+.msg.typing{color:var(--muted)}
+.ai-chip{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--mint);color:var(--green)}
+.check{display:flex;align-items:center;gap:8px;padding:6px 0}
+.share-preview{white-space:pre-wrap;font-size:13px;background:var(--bg);border-radius:12px;padding:12px;max-height:220px;overflow:auto}
+.tip{position:absolute;top:-6px;width:180px;background:var(--tip-bg);color:var(--tip-ink);font-size:12px;line-height:1.4;border-radius:10px;padding:7px 9px;pointer-events:none;transform:translateY(-100%);z-index:5}
+.chart-wrap svg{cursor:crosshair;touch-action:pan-y;border-radius:8px}
+.chart text{fill:var(--muted)}
+.fcline{font-size:13px;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:10px}
+.wlog{list-style:none;padding:0;margin:8px 0 0;font-size:13px}
+.wlog li{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.wlog li span:last-child{color:var(--muted);text-align:right}
+.rate{display:flex;gap:4px;margin-top:6px}
+.rate button{border:1px solid var(--line2);background:var(--card);border-radius:999px;padding:2px 9px;font-size:13px}
+.rate button.on{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.quality{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+.quality b{font-family:var(--display);font-size:20px;color:var(--ink)}
+.seg2{display:inline-flex;background:var(--bg);border-radius:999px;padding:3px;border:1px solid var(--line)}
+.seg2 button{border:0;background:none;padding:5px 12px;border-radius:999px;font-size:13px;color:var(--muted)}
+.seg2 button.on{background:var(--card);color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.warnbox{background:var(--warm-bg);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:13px;margin:8px 0}
+.top{top:env(safe-area-inset-top,0px)}
+.pf>*{min-width:0}   /* wide tables scroll inside their box instead of widening the page */
+@media (max-width:900px){.pf{grid-template-columns:minmax(0,1fr)}}
+
+</style>
+<style>
+/* Dark theme for the two apps. The app sets <html data-theme> from its own setting;
+   with no attribute yet (or none from the viewer), the system setting decides. */
+:root[data-theme="dark"]{
+  --bg:#0F1712;--card:#18231C;--ink:#E6EFE8;--muted:#A3B5A8;--faint:#7A8F80;
+  --line:#26342B;--line2:#3A4B40;--green:#6CC992;--green2:#8AD9A9;--mint:#1D3326;
+  --dry:#F29A84;--dry-bg:#3A221C;--cold:#8DBCEB;--cold-bg:#1A2B3C;--wet:#C3AEF0;--wet-bg:#2A2340;
+  --warm:#EBB65A;--warm-bg:#3A2D12;--ok:#6CC992;--ok-bg:#1D3326;
+  --on-green:#0F1712;--hover:#1F2C23;--tip-bg:#E6EFE8;--tip-ink:#0F1712;--coach-bg:#1D3326;--coach-ink:#E6EFE8;--coach-sub:#9CC8AC;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+  --bg:#0F1712;--card:#18231C;--ink:#E6EFE8;--muted:#A3B5A8;--faint:#7A8F80;
+  --line:#26342B;--line2:#3A4B40;--green:#6CC992;--green2:#8AD9A9;--mint:#1D3326;
+  --dry:#F29A84;--dry-bg:#3A221C;--cold:#8DBCEB;--cold-bg:#1A2B3C;--wet:#C3AEF0;--wet-bg:#2A2340;
+  --warm:#EBB65A;--warm-bg:#3A2D12;--ok:#6CC992;--ok-bg:#1D3326;
+  --on-green:#0F1712;--hover:#1F2C23;--tip-bg:#E6EFE8;--tip-ink:#0F1712;--coach-bg:#1D3326;--coach-ink:#E6EFE8;--coach-sub:#9CC8AC;
+  color-scheme:dark;
+  }
+}
+:root[data-theme="dark"] .bar{background:var(--line)}
+:root[data-theme="dark"] .top{background:rgba(15,23,18,.92)}
+:root[data-theme="dark"] .seg{background:#1F2C23}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .bar{background:var(--line)} :root:not([data-theme="light"]) .top{background:rgba(15,23,18,.92)} }
+
+</style>
+<style>
+/* Home map (web app and phone apps) */
+.hm-lead{margin:-6px 0 12px;max-width:70ch}
+.hm-modes{margin-bottom:12px}
+.hm-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:20px;align-items:start}
+@media (max-width:1000px){.hm-layout{grid-template-columns:1fr}}
+.hm-mapcol,.hm-cards{min-width:0}
+.hm-mapcard{padding:12px}
+.hm-svg{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.hm-rlabel{font-size:15px;font-weight:700;fill:var(--ink)}
+.hm-rsub{font-size:13px;fill:var(--muted)}
+.hm-flag{font-size:13px;font-weight:700;fill:var(--dry)}
+.hm-win{stroke:var(--cold);stroke-width:7;stroke-linecap:round}
+.hm-plant{cursor:grab}
+.hm-plant.dragging{cursor:grabbing}
+.hm-plant.dragging circle{stroke:var(--ink)}
+.hm-plabel{font-size:13px;font-weight:700;fill:var(--ink);paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
+.hm-legend{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:var(--muted);margin:8px 2px 0}
+.hm-legend .plant-room{width:100%}
+.hm-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.hm-legend i.hm-wkey{height:5px;border-radius:3px;background:var(--cold);vertical-align:2px}
+.hm-air{margin-top:8px}
+.hm-h{font-size:17px;margin:0 0 8px}
+.hm-card{padding:14px}
+.hm-chead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hm-vtext{margin:6px 0 8px;font-size:14px}
+.hm-plist{list-style:none;padding:0;margin:0}
+.hm-plist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.hm-plist .hm-move{grid-column:1/-1;margin:2px 0 0;padding:6px 9px;font-size:12px;border-radius:10px}
+.hm-pname{border:0;background:none;padding:0;font-weight:700;text-align:left;display:flex;align-items:center;gap:6px;color:var(--ink);min-width:0}
+.hm-dot{width:10px;height:10px;border-radius:50%;flex:none}
+/* inside the phone frame everything stacks */
+.screen .hm-layout{grid-template-columns:1fr;gap:12px}
+.screen .hm-mapcard{padding:6px}
+.screen .hm-plabel{font-size:15px}
+.screen .hm-rlabel{font-size:17px}
+.hm-titlerow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.hm-titlerow .h-scr{margin:0}
+
+</style>
+<style>
+/* Plant Agent page (web app) */
+.ag-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,340px);gap:20px;align-items:start}
+@media (max-width:1100px){.ag-grid{grid-template-columns:1fr}}
+.ag-main,.ag-side{min-width:0}
+.ag-goal label{display:block;margin-bottom:8px}
+.ag-row{display:flex;gap:8px;flex-wrap:wrap}
+.ag-row .field{flex:1;min-width:200px;margin:0}
+.ag-row .btn{width:auto}
+.ag-h{font-size:15px;margin:14px 0 8px}
+.ag-steps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.ag-steps li{display:flex;gap:10px;align-items:flex-start}
+.ag-steps code{display:block;font-size:11px;color:var(--muted);overflow-wrap:anywhere;margin-top:2px}
+.ag-dot{flex:none;width:24px;height:24px;border-radius:50%;background:var(--mint);color:var(--green);font-size:12px;font-weight:700;display:grid;place-items:center}
+.ag-live .ag-dot{animation:agpulse 1.2s ease-in-out infinite}
+@keyframes agpulse{50%{opacity:.4}}
+.ag-plan{white-space:pre-wrap;margin:0;line-height:1.55}
+.ag-acthead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.ag-acts{list-style:none;padding:0;margin:0}
+.ag-act{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.ag-act>div:first-child{min-width:0}
+.ag-act.declined b{text-decoration:line-through;color:var(--muted)}
+.ag-kind{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--green)}
+.ag-btns{display:flex;gap:6px;flex:none}
+.btn-sm.ag-ok{background:var(--green);border-color:var(--green);color:var(--on-green);font-weight:700}
+.ag-vac{border:1.5px solid var(--green)}
+.ag-watch{background:var(--mint);border-radius:10px;padding:8px 10px;font-size:13px}
+.ag-rems,.ag-hist{list-style:none;padding:0;margin:6px 0 0;font-size:13px}
+.ag-rems li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.ag-rems li div{display:flex;flex-direction:column;min-width:0}
+.ag-hist li{padding:4px 0;border-top:1px solid var(--line);color:var(--muted)}
+.ag-sheet{margin-top:8px}
+.ag-sheet .btn-sm{margin-top:6px}
+.ag-rem{display:flex;justify-content:space-between;align-items:center;gap:10px}
+@media (prefers-reduced-motion:reduce){.ag-live .ag-dot{animation:none}}
+
+</style>
+<style>
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:clamp(208px,16vw,260px) minmax(0,1fr);min-height:100vh;min-height:100dvh}
+.side{background:#17221B;color:#DDEBE1;padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;height:100dvh;overflow-y:auto;scrollbar-width:thin}
+.side .brand{color:#fff;margin:0 8px 18px}
+.side .brand i{background:#2E7A50}
+.side button.nav{display:flex;align-items:center;gap:10px;border:0;background:none;color:#B9CCBE;padding:10px 12px;border-radius:12px;text-align:left;font-weight:500;position:relative}
+.side button.nav:hover{background:rgba(255,255,255,.06)}
+.side button.nav.on{background:#2A3D30;color:#fff}
+.side button.nav svg{width:18px;height:18px}
+.side .badge{position:static;margin-left:auto}
+.side .grow{flex:1}
+.side .sim{background:#203327;border-radius:14px;padding:12px;font-size:13px}
+.side .sim b{display:block;color:#fff;font-family:var(--display);font-size:15px;margin:2px 0 8px}
+.side .sim .row{display:flex;gap:6px}
+.side .sim button{flex:1;border:0;border-radius:999px;padding:7px 0;background:#2E7A50;color:#fff;font-weight:700;font-size:12px}
+.side .sim button.alt{background:#2A3D30}
+.side .quick{display:flex;gap:6px;margin:0 4px 6px}
+.side .quick button{flex:1;border:1px solid #2F4236;background:none;color:#B9CCBE;border-radius:999px;padding:6px 0;font-size:12px;font-weight:700}
+.side .quick button.on{background:#2A3D30;color:#fff}
+/* .content is a size container: the plant split, Coach page and chart reflow on the space they really get */
+.content{--pad:clamp(14px,2.6vw,40px);padding:clamp(18px,2.4vw,32px) var(--pad) 48px;min-width:0;width:100%;max-width:1640px;container:content/inline-size;overflow-wrap:break-word}
+.head{display:flex;align-items:end;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;margin-bottom:clamp(12px,1.6vw,20px)}
+.head h1{font-size:clamp(26px,1.1rem + 1.4vw,38px);line-height:1.1}
+.head .btn{width:auto}
+.split{display:grid;grid-template-columns:minmax(0,1fr) clamp(330px,32cqw,460px);gap:clamp(14px,1.6cqw,24px);align-items:start}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:12px}
+.grid .plant{margin:0}
+.grid .plant.sel{outline:2px solid var(--green)}
+.plant-top>div{min-width:0}
+.panel-r{position:sticky;top:20px;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:clamp(8px,1.2cqw,12px);margin-bottom:14px}
+.stat{min-width:0}
+.stat strong{display:block;font-size:clamp(19px,1rem + .6cqw,24px)}
+.kpi{background:var(--card)}
+.stat{border:1.5px solid transparent;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.stat:hover{border-color:var(--line2);background:var(--hover)}
+.stat.on{border-color:var(--green);background:var(--mint)}
+.stat span{display:block;font-size:12px;color:var(--green);font-weight:700;margin-top:2px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.toolbar .field{margin:0;width:auto;padding:9px 12px;min-width:0}
+.toolbar input.field{flex:3 1 220px;min-width:0}
+.toolbar select.field{flex:1 1 140px;max-width:260px;text-overflow:ellipsis}
+.banner{display:block;width:100%;text-align:left;border:0;font:inherit}
+.detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+.detail-actions .btn{flex:1;min-width:min(140px,100%)}
+.detail-actions .btn.ghost{flex:0 0 auto;width:auto}
+/* detail chart: the SVG keeps its viewBox ratio (the hover readout maps x from its width),
+   so the label size steps against the drawn width to stay ~11–13px on screen */
+.chart{overflow:visible}
+.chart-wrap{container:chart/inline-size}
+@container chart (max-width:300px){.chart text{font-size:13.5px}}
+@container chart (min-width:300px) and (max-width:359px){.chart text{font-size:12.5px}}
+@container chart (min-width:440px) and (max-width:539px){.chart text{font-size:9.5px}}
+@container chart (min-width:540px){.chart text{font-size:8.5px}}
+.legend{flex-wrap:wrap;row-gap:2px}
+/* Coach: on wide screens the plant list and chat fill the window height and scroll inside */
+.coachpage{--chat-h:max(440px,calc(100dvh - 200px));display:grid;grid-template-columns:clamp(200px,24cqw,300px) minmax(0,1fr);gap:clamp(14px,1.6cqw,24px);align-items:start}
+.plist{max-height:var(--chat-h);overflow-y:auto;padding:2px;scrollbar-width:thin}
+.plist button{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:var(--card);border-radius:14px;padding:10px 12px;margin-bottom:6px}
+.plist button.on{outline:2px solid var(--green)}
+.chatwrap{background:var(--card);border-radius:20px;padding:clamp(12px,1.4cqw,18px);display:flex;flex-direction:column;height:var(--chat-h);min-height:0}
+.chatwrap .chat{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:2px}
+.chatwrap .msg{max-width:min(88%,680px)}
+.chatwrap .msg.ai{background:var(--bg)}
+.chatwrap .ask{flex:none;position:static}
+.modal{position:fixed;inset:0;background:rgba(10,16,12,.55);display:grid;place-items:center;z-index:50;padding:clamp(10px,3vw,24px)}
+.modal .card{width:min(520px,100%);max-height:calc(100vh - 32px);max-height:calc(100dvh - 2*clamp(10px,3vw,24px));overflow:auto;overscroll-behavior:contain;padding:clamp(16px,4vw,24px);margin:0}
+.modal textarea.field{min-height:90px;resize:vertical;font:inherit}
+.modal .share-preview{max-height:min(220px,30dvh)}
+.setcard{max-width:760px;margin-bottom:14px}
+.setcard h2{font-size:18px;margin-bottom:4px}
+.setrow{gap:8px 14px;flex-wrap:wrap}
+.setrow>div:first-child{flex:1 1 220px;min-width:0}
+.content>button.plant,.content>h2{max-width:960px}
+.sr{margin:-1px;white-space:nowrap}
+/* plant list beside the detail panel only while both fit; otherwise the panel drops below */
+@container content (max-width:640px){
+  .split{grid-template-columns:minmax(0,1fr)}
+  .panel-r{position:static}
+  .coachpage{grid-template-columns:minmax(0,1fr);--chat-h:max(420px,72dvh)}
+  .plist{display:flex;gap:6px;overflow-x:auto;max-height:none;scrollbar-width:none}
+  .plist button{flex:0 0 auto;width:auto;margin:0;max-width:70cqw}
+  .chatwrap .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:2px}
+  .chatwrap .chips button{flex:none;white-space:nowrap}
+}
+@container content (max-width:420px){
+  .panel-r>.card{padding:14px!important}
+  .detail-actions .btn.ghost{flex:1 1 auto}
+}
+/* narrow windows: the sidebar becomes a top bar — brand · demo clock · language, with the nav as a
+   scrollable row under it (on phones the clock moves to its own row) */
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;overflow:visible;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;padding:10px clamp(10px,2.6vw,24px)}
+  .side .brand{margin:0 6px 0 4px}
+  #mainnav{display:flex!important;order:3;flex:1 1 100%;min-width:0;gap:2px;margin:0 -3px;overflow-x:auto;scrollbar-width:none;padding:3px 28px 3px 3px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+  #mainnav::-webkit-scrollbar{display:none}
+  .side button.nav{flex:none;padding:8px 10px;white-space:nowrap}
+  .side .grow{display:none}
+  .side .quick{order:2;margin:0}
+  .side .quick button{flex:none;padding:6px 10px}
+  .side .sim{order:1;margin-left:auto;display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:6px 6px 6px 12px}
+  .side .sim b{margin:0;font-size:14px}
+  .side .sim .row{margin-left:auto}
+  .side .sim button{flex:none;padding:6px 12px}
+}
+@media (max-width:600px){
+  .side{gap:6px}
+  .side .quick{margin-left:auto}
+  .side .sim{order:4;flex:1 1 100%;padding:8px 10px}
+  #sim-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .side button.nav{gap:7px;padding:8px 9px}
+  .side button.nav svg{width:16px;height:16px}
+}
+@media (max-width:420px){.side button.nav svg{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#content" id="skip">Skip to content</a>
+<div class="shell">
+  <aside class="side" aria-label="Main">
+    <div class="brand"><i><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 22V10"/><path d="M12 12c0-5 3-8 8-8 0 5-3 8-8 8z"/><path d="M12 15c0-4-2.5-6.5-7-6.5 0 4 2.5 6.5 7 6.5z"/></svg></i>FloraSense</div>
+    <nav id="mainnav" style="display:contents"></nav>
+    <div class="grow"></div>
+    <div class="quick" role="group" aria-label="Language"><button data-lang="en">EN</button><button data-lang="pt">PT</button></div>
+    <div class="sim"><span id="sim-label"></span><b id="clock"></b>
+      <div class="row"><button id="b-tick">+6 h</button><button id="b-day"></button><button id="b-live" class="alt"></button></div>
+    </div>
+  </aside>
+  <main class="content" id="content" tabindex="-1"></main>
+</div>
+<div id="modal"></div>
+<div id="live" class="sr" aria-live="polite"></div>
+<input type="file" id="photo" accept="image/*" hidden>
+
+<script>
+/* FloraSense shared core: species library, plant logic and the local AI Coach.
+   Used by the app (index.html) and the site (site/). */
+/* =========================================================
+   Data
+   ========================================================= */
+const SPECIES = [
+  {id:"cal-orb", name:"Calathea orbifolia", common:"Calathea", m:[40,60], t:[18,27], dry:6, pot:250},
+  {id:"cal-lan", name:"Calathea lancifolia", common:"Rattlesnake plant", m:[45,65], t:[18,26], dry:6, pot:250},
+  {id:"cal-zeb", name:"Calathea zebrina", common:"Zebra plant", m:[40,60], t:[16,27], dry:6, pot:250},
+  {id:"fic-lyr", name:"Ficus lyrata", common:"Fiddle-leaf fig", m:[35,55], t:[16,29], dry:4, pot:500},
+  {id:"mon-del", name:"Monstera deliciosa", common:"Monstera", m:[35,60], t:[18,30], dry:4, pot:500},
+  {id:"nep-exa", name:"Nephrolepis exaltata", common:"Boston fern", m:[50,75], t:[16,27], dry:7, pot:300},
+  {id:"epi-aur", name:"Epipremnum aureum", common:"Golden pothos", m:[25,50], t:[15,30], dry:4, pot:200},
+  {id:"san-tri", name:"Dracaena trifasciata", common:"Snake plant", m:[10,35], t:[15,32], dry:2, pot:200},
+  {id:"spa-wal", name:"Spathiphyllum wallisii", common:"Peace lily", m:[45,70], t:[18,29], dry:7, pot:300},
+  {id:"zam-zam", name:"Zamioculcas zamiifolia", common:"ZZ plant", m:[15,40], t:[15,30], dry:2, pot:200},
+  {id:"phi-hed", name:"Philodendron hederaceum", common:"Heartleaf philodendron", m:[35,60], t:[18,29], dry:5, pot:250},
+  {id:"aloe-ver", name:"Aloe vera", common:"Aloe", m:[8,30], t:[13,30], dry:2, pot:150},
+  {id:"str-nic", name:"Strelitzia nicolai", common:"Bird of paradise", m:[40,60], t:[18,30], dry:5, pot:600},
+  {id:"oli-eur", name:"Olea europaea", common:"Indoor olive", m:[20,45], t:[10,28], dry:4, pot:500},
+  {id:"pha-hyb", name:"Phalaenopsis hybrid", common:"Moth orchid", m:[30,55], t:[18,29], dry:5, pot:150},
+  {id:"chl-com", name:"Chlorophytum comosum", common:"Spider plant", m:[30,55], t:[13,27], dry:5, pot:200},
+];
+const SP = Object.fromEntries(SPECIES.map(s=>[s.id,s]));
+const START = new Date("2026-10-19T08:00:00");
+
+function seedPlants(){
+  // Matches the "My plants" screen in the mobile design
+  return [
+    {id:1, probe:"FS-2041", sp:"cal-orb", name:"Calathea", room:"Bedroom", m:18, t:20.6, batt:100},
+    {id:2, probe:"FS-1877", sp:"fic-lyr", name:"Fiddle-leaf fig", room:"Office · by the window", m:41, t:14.2, batt:72},
+    {id:3, probe:"FS-1650", sp:"mon-del", name:"Monstera", room:"Living room", m:46, t:21.4, batt:88},
+    {id:4, probe:"FS-1912", sp:"nep-exa", name:"Boston fern", room:"Bathroom", m:62, t:22.1, batt:9},
+    {id:5, probe:"FS-1733", sp:"epi-aur", name:"Golden pothos", room:"Kitchen", m:35, t:21.0, batt:64},
+  ].map(p=>({...p, hist:backfill(p)}));
+}
+// Build `days` of 6-hourly history ending at the current reading.
+// Each point is {ts, m, t}; a point where the owner watered also has w:{ml, from}.
+function backfill(p, days=7, endTs=START.getTime()){
+  const s=SP[p.sp], n=days*4, series=[], watered=new Set(); let m=p.m;
+  for(let i=0;i<n;i++){
+    series.unshift(m); m+= s.dry/4*(0.8+Math.random()*0.4);
+    // going back in time the soil gets wetter; past the top of the range, that point was a watering
+    if(m>s.m[1]+8){ watered.add(n-1-i); m = p.m+(Math.random()*4) }
+  }
+  const pts=[];
+  for(let i=0;i<n;i++){
+    const pt={ts:endTs-(n-1-i)*6*3600e3, m:+series[i].toFixed(1), t:+(p.t+Math.sin(i*6/24*2*Math.PI)*0.9+(Math.random()-.5)*.4).toFixed(1)};
+    if(watered.has(i) && i>0) pt.w={ml:s.pot, from:+series[i-1].toFixed(1)};
+    pts.push(pt);
+  }
+  pts[n-1]={...pts[n-1], m:p.m, t:p.t};
+  return pts;
+}
+
+
+/* =========================================================
+   Plant logic
+   ========================================================= */
+function status(p){
+  const s=SP[p.sp];
+  if(p.m<s.m[0]) return {k:"dry", label:"Too dry", cls:"s-dry"};
+  if(p.m>s.m[1]) return {k:"wet", label:"Too wet", cls:"s-wet"};
+  if(p.t<s.t[0]) return {k:"cold", label:"Too cold", cls:"s-cold"};
+  if(p.t>s.t[1]) return {k:"warm", label:"Too warm", cls:"s-warm"};
+  return {k:"ok", label:"Healthy", cls:"s-ok"};
+}
+function dryRate(p){ // % per day from last 2 days of history
+  const h=p.hist, a=h[Math.max(0,h.length-9)].m, b=h[h.length-1].m;
+  const r=(a-b)/2; return r>0.5?r:SP[p.sp].dry;
+}
+function daysToDry(p){ const s=SP[p.sp]; if(p.m<s.m[0]) return 0; return (p.m-s.m[0])/dryRate(p); }
+function needsAttention(p){ return status(p).k!=="ok" }
+function waterAmount(p){ const s=SP[p.sp]; const gap=(s.m[0]+s.m[1])/2 - p.m; return Math.max(100, Math.round((s.pot*(gap/25))/50)*50); }
+function colorFor(k){ return {ok:"var(--ok)",dry:"var(--dry)",cold:"var(--cold)",wet:"var(--wet)",warm:"var(--warm)"}[k] }
+
+/* =========================================================
+   AI Coach (local, rule-based, follows the production prompt)
+   ========================================================= */
+function coachAnswer(p, q, lang="en"){
+  if(lang==="pt") return coachAnswerPT(p, q);
+  const s=SP[p.sp], st=status(p), ql=q.toLowerCase();
+  const mState = p.m<s.m[0]?"below":p.m>s.m[1]?"above":"inside";
+  const tState = p.t<s.t[0]?"below":p.t>s.t[1]?"above":"inside";
+  const mLine = `Moisture is ${p.m}%, ${mState} its ${s.m[0]}–${s.m[1]}% range`;
+  const tLine = `soil temperature is ${p.t} °C, ${tState} its ${s.t[0]}–${s.t[1]} °C range`;
+  const days = daysToDry(p);
+  // Guardrails from the system prompt
+  if(/pesticide|insecticide|spray|neem|dosage|toxic|poison|\b(dose|cats?|dogs?|pets?|eats?|eating|child|children|baby|health)\b|allerg/.test(ql))
+    return `I can't advise on pesticides, pet toxicity or human health, so I won't guess here. ${mLine}, which is what I can speak to. Action: ask a local nursery or your vet for that question.`;
+  if(/how much|ml|amount|water/.test(ql)){
+    if(mState==="below") return `${mLine}, so it is too dry. Water slowly with about ${waterAmount(p)} ml of room-temperature water until it drains. It should be back in range within a day. Action: water today, then tap "I watered it".`;
+    if(mState==="above") return `${mLine}, so the soil is still too wet. Watering now risks root rot. Action: skip watering and check again in ${Math.max(1,Math.round((p.m-s.m[1])/dryRate(p)))} day(s).`;
+    return `${mLine}, so it doesn't need water yet. At its current drying rate (~${dryRate(p).toFixed(1)}% a day) it will need about ${waterAmount({...p,m:s.m[0]})} ml in roughly ${Math.max(1,Math.round(days))} day(s). Action: wait for the alert.`;
+  }
+  if(/brown|crisp|edge|yellow|droop|wilt|curl|sad|dying|spot/.test(ql)){
+    let cause = mState==="below" ? "Dry soil is the most likely cause." :
+                mState==="above" ? "Soil that stays wet can rot roots, which shows up as yellowing or drooping." :
+                tState==="below" ? "Cold soil is the most likely stress, since moisture is fine." :
+                tState==="above" ? "Warm soil is drying roots faster than usual." :
+                "Both readings are in range, so the soil probably isn't the cause; light or humidity may be.";
+    let act = mState==="below" ? `water ${waterAmount(p)} ml today and keep it away from radiators.` :
+              mState==="above" ? "hold off watering and make sure the pot drains." :
+              tState==="below" ? "move it a little away from the window." :
+              tState==="above" ? "move it away from heat sources." :
+              "check the light and humidity, or ask a local nursery if it gets worse.";
+    return `${mLine}, and ${tLine}. ${cause} Action: ${act}`;
+  }
+  if(/cold|warm|hot|temp|window|radiator|heat/.test(ql)){
+    return `${tLine.charAt(0).toUpperCase()+tLine.slice(1)}. ${tState==="inside"?"The spot is fine for this species.":"Roots slow down outside this range, and the soil dries "+(tState==="below"?"more slowly, so water less often.":"faster.")} Action: ${tState==="below"?"move the pot away from the cold window and wait to water.":tState==="above"?"move it away from the heat source.":"no change needed."}`;
+  }
+  if(/repot|pot|soil mix|drain/.test(ql)){
+    return `Your readings don't tell me how root-bound it is, so I can't judge repotting from data alone. ${mLine}; if it dries out much faster than ~${s.dry}% a day, that can be a sign the roots fill the pot. Action: check for roots coming out of the drainage holes, or ask a local nursery.`;
+  }
+  if(/when|next|soon|predict|days/.test(ql)){
+    return mState==="below" ? `${mLine}, so it needs water now. Action: water about ${waterAmount(p)} ml today.`
+      : `${mLine}. It's drying at about ${dryRate(p).toFixed(1)}% a day, so it should need water in ~${Math.max(1,Math.round(days))} day(s). Action: nothing today; I'll alert you ahead of time.`;
+  }
+  if(/how is|doing|ok|healthy|status|fine/.test(ql)){
+    return `${mLine}, and ${tLine}. Overall: ${st.label.toLowerCase()}. Action: ${st.k==="ok"?"nothing needed today.":st.k==="dry"?`water ${waterAmount(p)} ml today.`:st.k==="wet"?"skip watering until it dries.":st.k==="cold"?"move it to a warmer spot.":"move it away from heat."}`;
+  }
+  return `My care guide and your readings don't answer that question, so I won't guess. What I can see: ${mLine}, and ${tLine}. Action: try asking about watering, temperature or leaf symptoms, or check with a local nursery.`;
+}
+
+// Portuguese version of the local Coach (same rules as the English one)
+function coachAnswerPT(p, q){
+  const s=SP[p.sp], st=status(p), ql=q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const mState = p.m<s.m[0]?"abaixo do":p.m>s.m[1]?"acima do":"dentro do";
+  const tState = p.t<s.t[0]?"abaixo do":p.t>s.t[1]?"acima do":"dentro do";
+  const mLine = `A humidade está em ${p.m}%, ${mState} intervalo ideal de ${s.m[0]}–${s.m[1]}%`;
+  const tLine = `a temperatura do solo está em ${p.t} °C, ${tState} intervalo de ${s.t[0]}–${s.t[1]} °C`;
+  const days = daysToDry(p), d=n=>`${n} dia${n===1?"":"s"}`;
+  if(/pesticida|inseticida|spray|neem|dosagem|toxic|venen|\b(dose|gatos?|caes|cao|animais|animal|comer|crianca|criancas|bebe|saude)\b|alergi/.test(ql))
+    return `Não posso dar conselhos sobre pesticidas, toxicidade para animais ou saúde humana, por isso não vou adivinhar. ${mLine}, e é sobre isso que posso falar. Ação: pergunta num viveiro local ou ao teu veterinário.`;
+  if(/quanta|quanto|ml|regar|rega|agua/.test(ql)){
+    if(p.m<s.m[0]) return `${mLine}, por isso está demasiado seca. Rega devagar com cerca de ${waterAmount(p)} ml de água à temperatura ambiente até escorrer. Deve voltar ao intervalo em menos de um dia. Ação: rega hoje e carrega em "Reguei".`;
+    if(p.m>s.m[1]) return `${mLine}, por isso o solo ainda está húmido demais. Regar agora arrisca apodrecer as raízes. Ação: não regues e volta a ver daqui a ${d(Math.max(1,Math.round((p.m-s.m[1])/dryRate(p))))}.`;
+    return `${mLine}, por isso ainda não precisa de água. Ao ritmo atual (~${dryRate(p).toFixed(1)}% por dia) vai precisar de cerca de ${waterAmount({...p,m:s.m[0]})} ml daqui a ${d(Math.max(1,Math.round(days)))}. Ação: espera pelo alerta.`;
+  }
+  if(/castanh|seca nas|pontas|bordas|amarel|murch|caid|enrol|triste|morr|mancha/.test(ql)){
+    const cause = p.m<s.m[0] ? "O solo seco é a causa mais provável." :
+                  p.m>s.m[1] ? "Um solo sempre molhado pode apodrecer as raízes, o que aparece como folhas amarelas ou caídas." :
+                  p.t<s.t[0] ? "O frio no solo é o stress mais provável, já que a humidade está bem." :
+                  p.t>s.t[1] ? "O solo quente está a secar as raízes mais depressa do que o normal." :
+                  "As duas leituras estão no intervalo, por isso o solo provavelmente não é a causa; pode ser a luz ou a humidade do ar.";
+    const act = p.m<s.m[0] ? `rega ${waterAmount(p)} ml hoje e afasta-a dos radiadores.` :
+                p.m>s.m[1] ? "não regues e confirma que o vaso drena." :
+                p.t<s.t[0] ? "afasta-a um pouco da janela." :
+                p.t>s.t[1] ? "afasta-a de fontes de calor." :
+                "verifica a luz e a humidade, ou pergunta num viveiro local se piorar.";
+    return `${mLine}, e ${tLine}. ${cause} Ação: ${act}`;
+  }
+  if(/frio|fria|quente|calor|temperatura|janela|radiador/.test(ql)){
+    const T=tLine.charAt(0).toUpperCase()+tLine.slice(1);
+    return `${T}. ${p.t>=s.t[0]&&p.t<=s.t[1]?"O sítio está bem para esta espécie.":"Fora deste intervalo as raízes abrandam e o solo seca "+(p.t<s.t[0]?"mais devagar, por isso rega menos vezes.":"mais depressa.")} Ação: ${p.t<s.t[0]?"afasta o vaso da janela fria e espera para regar.":p.t>s.t[1]?"afasta-o da fonte de calor.":"não é preciso mudar nada."}`;
+  }
+  if(/transplant|mudar de vaso|vaso|substrato|drena/.test(ql)){
+    return `As leituras não me dizem se as raízes já ocupam o vaso todo, por isso não consigo avaliar o transplante só com estes dados. ${mLine}; se secar muito mais depressa do que ~${s.dry}% por dia, pode ser sinal de que as raízes enchem o vaso. Ação: vê se há raízes a sair pelos furos de drenagem, ou pergunta num viveiro local.`;
+  }
+  if(/quando|proxim|em breve|prever|dias/.test(ql)){
+    return p.m<s.m[0] ? `${mLine}, por isso precisa de água já. Ação: rega cerca de ${waterAmount(p)} ml hoje.`
+      : `${mLine}. Está a secar cerca de ${dryRate(p).toFixed(1)}% por dia, por isso deve precisar de água daqui a ~${d(Math.max(1,Math.round(days)))}. Ação: nada hoje; aviso-te com antecedência.`;
+  }
+  if(/como esta|como vai|estado|saudavel|bem|ok/.test(ql)){
+    const lbl={ok:"saudável",dry:"demasiado seca",wet:"demasiado molhada",cold:"com frio",warm:"com calor a mais"}[st.k];
+    return `${mLine}, e ${tLine}. No geral: ${lbl}. Ação: ${st.k==="ok"?"nada a fazer hoje.":st.k==="dry"?`rega ${waterAmount(p)} ml hoje.`:st.k==="wet"?"não regues até secar.":st.k==="cold"?"muda-a para um sítio mais quente.":"afasta-a do calor."}`;
+  }
+  return `O meu guia de cuidados e as tuas leituras não respondem a essa pergunta, por isso não vou adivinhar. O que vejo: ${mLine}, e ${tLine}. Ação: pergunta sobre rega, temperatura ou sintomas nas folhas, ou fala com um viveiro local.`;
+}
+
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+</script>
+<script>
+/* FloraSense shared UI: translations, charts, forecast, watering log, Coach ratings,
+   the optional real AI Coach (Claude), photos, plant-sitter sheets and theme.
+   Used by the phone app (app.html) and the web app (webapp.html).
+   Each page defines `S` (its saved state) and `render()`; this file reads them at call time. */
+const KEY_AI="florasense-aikey";
+const MODEL="claude-opus-5-5";
+let range=7, aiTest="";   // chart range in days; last AI connection test result
+
+/* =========================================================
+   Text in both languages
+   ========================================================= */
+const TXT = {
+ en:{
+  tap_confirm:"Tap again to confirm", dl_fail:"The file couldn't be saved.", s_ai_d_viewer:"Off by default. When on, the Coach and photo checks ask Claude through claude.ai, on your own Claude account. The first question asks your permission.", s_ai_warn_viewer:"When this is on, the plant's readings, your question and any photo are sent to Claude. Nothing is sent while it's off.",
+  // phone app
+  tab_plants:"Plants", tab_alerts:"Alerts", tab_coach:"Coach", tab_settings:"Settings", tab_demo:"Demo", back:"Back",
+  sim_title:"Probe simulator", sim_d:"The phone is a working prototype. Each probe reads soil moisture and temperature every 15 minutes; here one tick moves the clock forward 6 hours so you can watch plants dry out, alerts fire and the Coach react.",
+  run_live:"▶ Run live", plus6:"+6 hours", reset_demo:"Reset demo", kpi_mon:"Plants monitored", on:"On", off:"Off", event_log:"Event log",
+  sim_note:"The Coach uses local rules that follow the production prompt (grounded in readings, 3 sentences + one action, refuses pet, pesticide and health questions). Turn on the real AI Coach in Settings to use Claude instead. All data is fictional.",
+  log_start:"Demo started with 5 paired probes", log_alert:"🔔 {p}: {st} ({m}% · {t} °C)", log_back:"✓ {p} back in range", log_water:"💧 Watered {p} (~{ml} ml) → {m}%",
+  log_pair:"Paired {id} → {p} ({s})", log_unpair:"Unpaired {p}", log_prem_on:"Premium on (14-day trial)", log_prem_off:"Premium off", log_edit:"Edited {p}",
+  sum:"{n} plants · {a} need attention", updated:"Updated just now", all_ok:"Every plant is in range", nothing_today:"Nothing to do today.", pair_another:"+ Pair another probe",
+  f_all:"All", f_att:"Attention", f_ok:"Healthy", step:"Step {n} of 3", talking:"Talking about", version:"FloraSense Gen 1 · v1.0 beta",
+  skip:"Skip to content", nav_plants:"My plants", nav_alerts:"Alerts", nav_coach:"Plant Coach", nav_settings:"Settings",
+  sim:"Demo clock", day:"+1 day", live:"▶ Live", pause:"❚❚ Pause",
+  my_plants:"My plants", pair:"+ Pair a probe", plants:"Plants", need_att:"Need attention", in_range:"In range", plan:"Plan",
+  show_all:"Show all", show_these:"Show these", show_healthy:"Show healthy", manage_plan:"Manage plan →",
+  premium:"Premium", free:"Free", search:"Search by name, species or room", all_rooms:"All rooms",
+  sort_urgent:"Sort: most urgent first", sort_name:"Sort: name A–Z", sort_dry:"Sort: driest first", sort_room:"Sort: room",
+  showing:"Showing {n} of {total} plants", no_match:"No plant matches. Try another search or room.",
+  none_att:"No plant needs attention right now. 🌿", none_ok:"No plant is in range right now.", no_probes:"No probes yet. Pair one to start.",
+  moisture:"Moisture", soil_temp:"Soil temp", soil_moisture:"Soil moisture", soil_temperature:"Soil temperature",
+  st_ok:"Healthy", st_dry:"Too dry", st_wet:"Too wet", st_cold:"Too cold", st_warm:"Too warm", inrange:"In range",
+  ideal:"ideal", last_days:"Last {n} days", days:"{n} days", forecast:"forecast", watered:"watered", ideal_range:"ideal range", temp:"Temp",
+  water_today:"Water today", water_by:"Water by {d}", below_min:"moisture is below {n}%", drying:"drying ~{r}% a day, reaches {n}% in about {t}",
+  hours:"{n} hours", day1:"1 day", daysN:"{n} days",
+  ban_dry:"{p} needs water today", ban_wet:"{p} is too wet — skip watering", ban_cold:"{p} is too cold", ban_warm:"{p} is too warm",
+  coach_based:"AI Coach · based on your readings", followup:"Ask a follow-up question →", coach_premium:"AI Coach is a Premium feature.", turn_on_premium:"Turn on Premium in Settings.",
+  wlog:"Watering log", wlog_count:"last 30 days: {n}", wlog_empty:"No waterings logged yet. Tap \"I watered it\" after watering.", wlog_row:"~{ml} ml · {a}% → {b}%",
+  probe:"Probe {id} · battery {b}%", replace:"replace within ~14 days", next_water:"Next watering", today:"today", in_days:"in ~{n} day(s)",
+  i_watered:"I watered it", edit:"Edit", share:"Share", unpair:"Unpair", unpair_q:"Unpair {p}?", notes:"Notes",
+  select_plant:"Select a plant to see its details.",
+  alerts:"Alerts", no_alerts:"No alerts. Every plant is happy.", now_att:"Needs attention now", predicted:"Predicted", battery:"Battery",
+  will_need:"Will need water in ~{n} hours, based on its own drying pattern", batt_row:"Probe {id} at {b}%. Replace the coin cell within ~14 days.",
+  coach:"Plant Coach", coach_upsell:"Ask why. Get an answer built on your plant's own data.", coach_price:"$4.99/month or $49/year · 14-day free trial with every probe.", trial:"Start free trial",
+  pair_first:"Pair a probe first.", using:"Using: 7 days of readings · {s} care guide · now {m}% / {t} °C",
+  hi:"Hi! Ask me anything about {p}. I only answer from its readings and the vetted care library.", ai_label:"AI-generated · check with a nursery if unsure",
+  q1:"Why are the leaf edges turning brown?", q2:"How much water?", q3:"When will it need water?", q4:"Is it too cold?", q5:"Should I repot it?",
+  ask_ph:"Ask the Coach", ask:"Ask", photo:"📷 Leaf photo", helpful:"Helpful", not_helpful:"Not helpful",
+  rate_hint:"Rate answers with 👍 / 👎 to track the helpful rate", helpful_rate:"Helpful rate", rated:"{up} of {n} rated · target ≥ 80%",
+  real_ai:"Real AI", local_ai:"Local rules", thinking:"Thinking…",
+  photo_needs_ai:"Photo checks need the real AI Coach. Turn it on in Settings → Real AI Coach; until then the photo stays on this computer and isn't analysed.",
+  photo_q:"What do you see on this leaf?", ai_error:"The real AI couldn't answer ({e}), so this is the local answer:", ai_refused:"The AI declined to answer this question. Try asking it another way, or check with a local nursery.",
+  settings:"Settings", s_general:"General", s_premium_d:"AI Coach, predictive alerts, unlimited history", s_lang:"Language", s_theme:"Appearance",
+  th_auto:"Auto", th_light:"Light", th_dark:"Dark", s_quality:"AI Coach quality", q_none:"{n} answers, none rated yet",
+  q_line:"{r}% helpful ({up} of {n} rated, {a} answers) · target ≥ 80%", on_target:"On target", below_target:"Below target",
+  s_probes:"Probes paired", none:"none", s_data:"Data", s_data_d:"Stored in this browser only", export:"Export CSV",
+  s_reset:"Reset demo", s_reset_d:"Back to 19 October 2026 with the original 5 plants", reset:"Reset", reset_q:"Reset the demo?",
+  s_ai:"Real AI Coach (optional)", s_ai_d:"Off by default. When on, the Coach and photo checks use Claude ({m}) instead of the local rules.",
+  s_ai_warn:"When this is on, the plant's readings, your question and any photo are sent to Anthropic's API. Nothing is sent while it's off.",
+  s_ai_on:"Use the real AI Coach", s_key:"Anthropic API key", s_key_ph:"sk-ant-…", s_remember:"Remember the key in this browser",
+  s_key_note:"The key is only sent to api.anthropic.com. Without \"remember\", it's forgotten when you close the page.",
+  s_test:"Test connection", s_testing:"Testing…", s_ok:"Connected ✓", s_fail:"Couldn't connect: {e}", s_need_key:"Add your API key first.",
+  pair_title:"Pair a probe · step {n} of 3", scan_title:"Scan the probe", scan_d:"Push the probe into the soil near the roots, then scan the QR code on its cap with your phone.", scan:"Simulate scan",
+  connected:"✔ Probe {id} connected · battery 100%", which:"Which plant is it in?", search_sp:"Search 300 species, e.g. fern", no_sp:"No match in this demo library.", cont:"Continue",
+  name_title:"Name your plant", name:"Name", room:"Room", species:"Species", add:"Add plant", close:"Close",
+  edit_title:"Edit {p}", save:"Save", cancel:"Cancel", notes_ph:"e.g. Repotted in March; likes the east window.",
+  share_title:"Share with a plant-sitter", share_d:"Make a simple care sheet for whoever looks after your plants. It shows each plant's status and what to do.",
+  sitter:"Plant-sitter's name (optional)", which_plants:"Plants to include", copy:"Copy as text", copied:"Copied ✓", download:"Download page",
+  sheet_title:"Plant care sheet", sheet_for:"For {n}", sheet_made:"Made {d} with FloraSense",
+  sheet_water:"Water about {ml} ml when the soil feels dry. Next watering: {w}.", sheet_now:"Needs water now.",
+  sheet_range:"Ideal moisture {a}–{b}% · soil {c}–{d} °C", sheet_note:"Note: {n}",
+  rooms:["Living room","Bedroom","Kitchen","Bathroom","Office","Balcony","Office · by the window"],
+  exp_headers:["plant","species","room","probe","moisture_pct","soil_temp_c","status","notes"]
+ },
+ pt:{
+  tap_confirm:"Toca outra vez para confirmar", dl_fail:"Não foi possível guardar o ficheiro.", s_ai_d_viewer:"Desligado por defeito. Quando ligado, o Coach e a análise de fotos perguntam ao Claude através do claude.ai, na tua própria conta. A primeira pergunta pede a tua autorização.", s_ai_warn_viewer:"Com isto ligado, as leituras da planta, a tua pergunta e as fotos são enviadas ao Claude. Nada é enviado enquanto estiver desligado.",
+  // app de telemóvel
+  tab_plants:"Plantas", tab_alerts:"Alertas", tab_coach:"Coach", tab_settings:"Definições", tab_demo:"Demo", back:"Voltar",
+  sim_title:"Simulador de sondas", sim_d:"O telemóvel é um protótipo funcional. Cada sonda lê a humidade e a temperatura do solo a cada 15 minutos; aqui cada passo avança o relógio 6 horas para veres as plantas a secar, os alertas a disparar e o Coach a reagir.",
+  run_live:"▶ Ao vivo", plus6:"+6 horas", reset_demo:"Repor demo", kpi_mon:"Plantas monitorizadas", on:"Ligado", off:"Desligado", event_log:"Registo de eventos",
+  sim_note:"O Coach usa regras locais que seguem o prompt de produção (baseado nas leituras, 3 frases + uma ação, recusa perguntas sobre animais, pesticidas e saúde). Ativa o AI Coach real nas Definições para usar o Claude. Todos os dados são fictícios.",
+  log_start:"Demo iniciada com 5 sondas emparelhadas", log_alert:"🔔 {p}: {st} ({m}% · {t} °C)", log_back:"✓ {p} voltou ao intervalo", log_water:"💧 {p} regada (~{ml} ml) → {m}%",
+  log_pair:"Emparelhada {id} → {p} ({s})", log_unpair:"{p} desemparelhada", log_prem_on:"Premium ligado (14 dias de teste)", log_prem_off:"Premium desligado", log_edit:"{p} editada",
+  sum:"{n} plantas · {a} precisam de atenção", updated:"Atualizado agora", all_ok:"Todas as plantas no intervalo", nothing_today:"Nada a fazer hoje.", pair_another:"+ Emparelhar outra sonda",
+  f_all:"Todas", f_att:"Atenção", f_ok:"Saudáveis", step:"Passo {n} de 3", talking:"A falar sobre", version:"FloraSense Gen 1 · v1.0 beta",
+  skip:"Saltar para o conteúdo", nav_plants:"As minhas plantas", nav_alerts:"Alertas", nav_coach:"Plant Coach", nav_settings:"Definições",
+  sim:"Relógio da demo", day:"+1 dia", live:"▶ Ao vivo", pause:"❚❚ Pausa",
+  my_plants:"As minhas plantas", pair:"+ Emparelhar sonda", plants:"Plantas", need_att:"Precisam de atenção", in_range:"No intervalo", plan:"Plano",
+  show_all:"Ver todas", show_these:"Ver estas", show_healthy:"Ver saudáveis", manage_plan:"Gerir plano →",
+  premium:"Premium", free:"Grátis", search:"Procurar por nome, espécie ou divisão", all_rooms:"Todas as divisões",
+  sort_urgent:"Ordenar: mais urgentes primeiro", sort_name:"Ordenar: nome A–Z", sort_dry:"Ordenar: mais secas primeiro", sort_room:"Ordenar: divisão",
+  showing:"A mostrar {n} de {total} plantas", no_match:"Nenhuma planta corresponde. Tenta outra pesquisa ou divisão.",
+  none_att:"Nenhuma planta precisa de atenção agora. 🌿", none_ok:"Nenhuma planta está no intervalo agora.", no_probes:"Ainda não há sondas. Emparelha uma para começar.",
+  moisture:"Humidade", soil_temp:"Temp. do solo", soil_moisture:"Humidade do solo", soil_temperature:"Temperatura do solo",
+  st_ok:"Saudável", st_dry:"Seca", st_wet:"Molhada", st_cold:"Com frio", st_warm:"Com calor", inrange:"No intervalo",
+  ideal:"ideal", last_days:"Últimos {n} dias", days:"{n} dias", forecast:"previsão", watered:"regada", ideal_range:"intervalo ideal", temp:"Temp.",
+  water_today:"Regar hoje", water_by:"Regar até {d}", below_min:"a humidade está abaixo de {n}%", drying:"seca ~{r}% por dia, chega a {n}% em cerca de {t}",
+  hours:"{n} horas", day1:"1 dia", daysN:"{n} dias",
+  ban_dry:"{p} precisa de água hoje", ban_wet:"{p} está molhada demais — não regues", ban_cold:"{p} está com frio", ban_warm:"{p} está com calor a mais",
+  coach_based:"AI Coach · com base nas tuas leituras", followup:"Fazer outra pergunta →", coach_premium:"O AI Coach é uma funcionalidade Premium.", turn_on_premium:"Ativa o Premium nas Definições.",
+  wlog:"Registo de regas", wlog_count:"últimos 30 dias: {n}", wlog_empty:"Ainda não há regas registadas. Carrega em \"Reguei\" depois de regar.", wlog_row:"~{ml} ml · {a}% → {b}%",
+  probe:"Sonda {id} · bateria {b}%", replace:"substituir em ~14 dias", next_water:"Próxima rega", today:"hoje", in_days:"daqui a ~{n} dia(s)",
+  i_watered:"Reguei", edit:"Editar", share:"Partilhar", unpair:"Desemparelhar", unpair_q:"Desemparelhar {p}?", notes:"Notas",
+  select_plant:"Escolhe uma planta para ver os detalhes.",
+  alerts:"Alertas", no_alerts:"Sem alertas. Todas as plantas estão bem.", now_att:"Precisam de atenção agora", predicted:"Previstos", battery:"Bateria",
+  will_need:"Vai precisar de água daqui a ~{n} horas, segundo o seu ritmo de secagem", batt_row:"Sonda {id} com {b}%. Troca a pilha em ~14 dias.",
+  coach:"Plant Coach", coach_upsell:"Pergunta porquê. Recebe uma resposta baseada nos dados da tua planta.", coach_price:"4,99 $/mês ou 49 $/ano · 14 dias grátis com cada sonda.", trial:"Começar teste grátis",
+  pair_first:"Emparelha primeiro uma sonda.", using:"A usar: 7 dias de leituras · guia de {s} · agora {m}% / {t} °C",
+  hi:"Olá! Pergunta-me o que quiseres sobre {p}. Só respondo com base nas leituras e no guia de cuidados verificado.", ai_label:"Gerado por IA · confirma num viveiro se tiveres dúvidas",
+  q1:"Porque é que as pontas das folhas estão castanhas?", q2:"Quanta água devo dar?", q3:"Quando vai precisar de água?", q4:"Está com frio?", q5:"Devo mudar de vaso?",
+  ask_ph:"Pergunta ao Coach", ask:"Perguntar", photo:"📷 Foto da folha", helpful:"Útil", not_helpful:"Não foi útil",
+  rate_hint:"Avalia as respostas com 👍 / 👎 para acompanhar a taxa de utilidade", helpful_rate:"Taxa de utilidade", rated:"{up} de {n} avaliadas · objetivo ≥ 80%",
+  real_ai:"IA real", local_ai:"Regras locais", thinking:"A pensar…",
+  photo_needs_ai:"A análise de fotos precisa do AI Coach real. Ativa-o em Definições → AI Coach real; até lá a foto fica neste computador e não é analisada.",
+  photo_q:"O que vês nesta folha?", ai_error:"A IA real não conseguiu responder ({e}), por isso esta é a resposta local:", ai_refused:"A IA recusou responder a esta pergunta. Tenta perguntar de outra forma, ou fala com um viveiro local.",
+  settings:"Definições", s_general:"Geral", s_premium_d:"AI Coach, alertas previstos, histórico ilimitado", s_lang:"Idioma", s_theme:"Aspeto",
+  th_auto:"Automático", th_light:"Claro", th_dark:"Escuro", s_quality:"Qualidade do AI Coach", q_none:"{n} respostas, nenhuma avaliada",
+  q_line:"{r}% úteis ({up} de {n} avaliadas, {a} respostas) · objetivo ≥ 80%", on_target:"No objetivo", below_target:"Abaixo do objetivo",
+  s_probes:"Sondas emparelhadas", none:"nenhuma", s_data:"Dados", s_data_d:"Guardados apenas neste navegador", export:"Exportar CSV",
+  s_reset:"Repor demo", s_reset_d:"Volta a 19 de outubro de 2026 com as 5 plantas originais", reset:"Repor", reset_q:"Repor a demo?",
+  s_ai:"AI Coach real (opcional)", s_ai_d:"Desligado por defeito. Quando ligado, o Coach e a análise de fotos usam o Claude ({m}) em vez das regras locais.",
+  s_ai_warn:"Com isto ligado, as leituras da planta, a tua pergunta e as fotos são enviadas para a API da Anthropic. Nada é enviado enquanto estiver desligado.",
+  s_ai_on:"Usar o AI Coach real", s_key:"Chave da API da Anthropic", s_key_ph:"sk-ant-…", s_remember:"Guardar a chave neste navegador",
+  s_key_note:"A chave só é enviada para api.anthropic.com. Sem \"guardar\", é esquecida quando fechas a página.",
+  s_test:"Testar ligação", s_testing:"A testar…", s_ok:"Ligado ✓", s_fail:"Não foi possível ligar: {e}", s_need_key:"Adiciona primeiro a tua chave da API.",
+  pair_title:"Emparelhar sonda · passo {n} de 3", scan_title:"Ler a sonda", scan_d:"Espeta a sonda no solo perto das raízes e lê o código QR da tampa com o telemóvel.", scan:"Simular leitura",
+  connected:"✔ Sonda {id} ligada · bateria 100%", which:"Em que planta está?", search_sp:"Procura entre 300 espécies, ex. feto", no_sp:"Sem resultados nesta biblioteca de demo.", cont:"Continuar",
+  name_title:"Dá um nome à planta", name:"Nome", room:"Divisão", species:"Espécie", add:"Adicionar planta", close:"Fechar",
+  edit_title:"Editar {p}", save:"Guardar", cancel:"Cancelar", notes_ph:"ex. Mudei de vaso em março; gosta da janela a nascente.",
+  share_title:"Partilhar com quem cuida das plantas", share_d:"Cria uma folha de cuidados simples para quem vai tratar das tuas plantas. Mostra o estado de cada uma e o que fazer.",
+  sitter:"Nome de quem cuida (opcional)", which_plants:"Plantas a incluir", copy:"Copiar como texto", copied:"Copiado ✓", download:"Descarregar página",
+  sheet_title:"Folha de cuidados das plantas", sheet_for:"Para {n}", sheet_made:"Feita a {d} com o FloraSense",
+  sheet_water:"Rega cerca de {ml} ml quando o solo estiver seco. Próxima rega: {w}.", sheet_now:"Precisa de água agora.",
+  sheet_range:"Humidade ideal {a}–{b}% · solo {c}–{d} °C", sheet_note:"Nota: {n}",
+  rooms:["Sala","Quarto","Cozinha","Casa de banho","Escritório","Varanda","Escritório · junto à janela"],
+  exp_headers:["planta","especie","divisao","sonda","humidade_pct","temp_solo_c","estado","notas"]
+ }
+};
+function t(k, v={}){ let s=(TXT[S.lang]||TXT.en)[k] ?? TXT.en[k] ?? k; if(typeof s!=="string") return s; return s.replace(/\{(\w+)\}/g,(_,x)=>v[x]??""); }
+const LOCALE = ()=> S.lang==="pt" ? "pt-PT" : "en-GB";
+const stLabel = p => t("st_"+status(p).k);
+
+let apiKey=""; try{ apiKey=localStorage.getItem(KEY_AI)||"" }catch(e){}
+function saveKey(){ try{ if(S.ai.remember && apiKey) localStorage.setItem(KEY_AI, apiKey); else localStorage.removeItem(KEY_AI) }catch(e){} }
+const $ = s=>document.querySelector(s);
+const DAY=86400e3;
+const fmtDay = ts=>new Date(ts).toLocaleDateString(LOCALE(),{weekday:"long",day:"numeric",month:"long"});
+const fmtShort = ts=>new Date(ts).toLocaleDateString(LOCALE(),{weekday:"short",day:"numeric",month:"short"});
+const fmtWhen = ts=>new Date(ts).toLocaleString(LOCALE(),{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+const announce = msg=>{ $("#live").textContent=""; setTimeout(()=>$("#live").textContent=msg,30) };
+
+/* ---------- theme ---------- */
+const mq = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+const HOST_THEME = document.documentElement.getAttribute("data-theme");   // a viewer's explicit light/dark choice, if any
+function applyTheme(){ const dark = S.theme==="dark" || (S.theme==="auto" && (HOST_THEME ? HOST_THEME==="dark" : !!(mq && mq.matches))); document.documentElement.dataset.theme = dark?"dark":"light"; document.documentElement.lang=S.lang }
+mq && mq.addEventListener && mq.addEventListener("change",()=>{ applyTheme(); render() });
+
+function rangeBar(v,[lo,hi],min,max,k){
+  const pct=x=>Math.max(0,Math.min(100,(x-min)/(max-min)*100));
+  return `<div class="bar" aria-hidden="true"><div class="band" style="left:${pct(lo)}%;width:${pct(hi)-pct(lo)}%"></div><div class="dot" style="left:${pct(v)}%;background:${colorFor(k)}"></div></div>`;
+}
+function forecast(p){ const s=SP[p.sp]; if(p.m<s.m[0]) return {now:true}; const days=daysToDry(p); return {days, at:S.now+days*DAY, rate:dryRate(p)} }
+function durText(days){ if(days<1) return t("hours",{n:Math.max(1,Math.round(days*24))}); const n=Math.round(days); return n===1?t("day1"):t("daysN",{n}) }
+
+let chartPts={};
+function chart(p){
+  const s=SP[p.sp], W=360, H=170, L=6, R=6, top=8, bottom=20;
+  const fc=S.premium?forecast(p):null;
+  const ahead = fc&&!fc.now ? Math.min(fc.days, range===7?3:7) : 0;
+  const t0=S.now-range*DAY, t1=S.now+ahead*DAY+(ahead?0:DAY*0.02);
+  let h=p.hist.filter(d=>d.ts>=t0-6*3600e3);
+  if(!h.length) h=[{ts:S.now, m:p.m, t:p.t}];   // no readings in range (e.g. the clock jumped ahead)
+  const x=ts=>L+(ts-t0)/(t1-t0)*(W-L-R), ym=v=>top+(1-v/100)*(H-top-bottom), yt=v=>top+(1-(v-5)/30)*(H-top-bottom);
+  const path=f=>h.map((d,i)=>`${i?"L":"M"}${x(d.ts).toFixed(1)},${f(d).toFixed(1)}`).join("");
+  chartPts[p.id]=h.map(d=>({...d, x:x(d.ts), y:ym(d.m)}));
+  let labels=""; const step=range===7?2:7;
+  for(let d=0; d<=range; d+=step){ const ts=S.now-(range-d)*DAY;
+    labels+=`<text x="${x(ts)}" y="${H-4}" text-anchor="middle">${d===range?esc(t("today")):new Date(ts).toLocaleDateString(LOCALE(),range===7?{weekday:"short"}:{day:"numeric",month:"short"})}</text>` }
+  let fcSvg="";
+  if(ahead){
+    const endTs=S.now+ahead*DAY, endM=Math.max(0,p.m-fc.rate*ahead);
+    fcSvg+=`<rect x="${x(S.now)}" y="${top}" width="${x(t1)-x(S.now)}" height="${H-top-bottom}" style="fill:var(--bg)"/>`;
+    fcSvg+=`<text x="${(x(S.now)+x(t1))/2}" y="${top+10}" text-anchor="middle" style="font-size:9px">${t("forecast")}</text>`;
+    fcSvg+=`<path d="M${x(S.now)},${ym(p.m)}L${x(endTs)},${ym(endM)}" style="stroke:var(--green)" stroke-width="2" stroke-dasharray="2 4" fill="none"/>`;
+    if(fc.days<=ahead) fcSvg+=`<circle cx="${x(fc.at)}" cy="${ym(s.m[0])}" r="5" style="fill:var(--card);stroke:var(--dry)" stroke-width="2"/>`;
+  }
+  const drops=h.filter(d=>d.w).map(d=>`<text x="${x(d.ts)}" y="${ym(d.m)-7}" text-anchor="middle" style="font-size:11px">💧</text>`).join("");
+  const last=h[h.length-1];
+  const fcText = fc ? (fc.now ? `<b style="color:var(--dry)">${t("water_today")}</b> · ${t("below_min",{n:s.m[0]})}` : `<b>${t("water_by",{d:fmtShort(fc.at)})}</b> · ${t("drying",{r:fc.rate.toLocaleString(LOCALE(),{maximumFractionDigits:1}),n:s.m[0],t:durText(fc.days)})}`) : "";
+  return `<div class="chart-wrap" data-chart="${p.id}" style="position:relative">
+   <svg class="chart" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="${t("last_days",{n:range})}: ${esc(p.name)}. ${t("moisture")} ${p.m}%. ${fc?(fc.now?t("water_today"):t("water_by",{d:fmtShort(fc.at)})):""}. ← → ">
+   ${fcSvg}
+   <rect x="${L}" y="${ym(s.m[1])}" width="${W-L-R}" height="${ym(s.m[0])-ym(s.m[1])}" style="fill:var(--mint)" opacity=".85"/>
+   <line x1="${x(S.now)}" x2="${x(S.now)}" y1="${top}" y2="${H-bottom}" style="stroke:var(--line2)"/>
+   <path d="${path(d=>yt(d.t))}" fill="none" stroke="#D08A3B" stroke-width="1.4" stroke-dasharray="3 3"/>
+   <path d="${path(d=>ym(d.m))}" fill="none" style="stroke:var(--green)" stroke-width="${range===7?2.4:1.8}" stroke-linejoin="round"/>
+   ${drops}
+   <circle cx="${x(last.ts)}" cy="${ym(last.m)}" r="4" style="fill:var(--green)"/>
+   <line class="hover-line" x1="0" x2="0" y1="${top}" y2="${H-bottom}" style="stroke:var(--ink)" stroke-width="1" visibility="hidden"/>
+   <circle class="hover-dot" r="4" style="fill:var(--card);stroke:var(--ink)" stroke-width="2" visibility="hidden"/>
+   ${labels}</svg>
+   <div class="tip" hidden></div></div>
+   <div class="legend"><span><i style="background:var(--green)"></i>${t("moisture")}</span><span><i style="background:#D08A3B"></i>${t("temp")}</span><span><i style="background:var(--mint);height:8px"></i>${t("ideal_range")}</span><span>💧 ${t("watered")}</span>${ahead?`<span><i style="background:repeating-linear-gradient(90deg,var(--green) 0 2px,transparent 2px 5px)"></i>${t("forecast")}</span>`:""}</div>
+   ${fc?`<div class="fcline">${fcText} <span class="premium">Premium</span></div>`:""}`;
+}
+
+// Chart readout: mouse hover, or ← → when the chart has focus
+function showPoint(wrap, best){
+  const svg=wrap.querySelector("svg"), box=svg.getBoundingClientRect(), tip=wrap.querySelector(".tip");
+  const line=svg.querySelector(".hover-line"), dot=svg.querySelector(".hover-dot");
+  line.setAttribute("x1",best.x); line.setAttribute("x2",best.x); line.setAttribute("visibility","visible");
+  dot.setAttribute("cx",best.x); dot.setAttribute("cy",best.y); dot.setAttribute("visibility","visible");
+  tip.innerHTML=`<b>${fmtWhen(best.ts)}</b><br>${t("moisture")} ${best.m}% · ${t("soil_temp")} ${best.t} °C${best.w?`<br>💧 ${t("wlog_row",{ml:best.w.ml,a:best.w.from,b:best.m})}`:""}`;
+  tip.hidden=false;
+  const px=best.x/360*box.width; tip.style.left=Math.min(Math.max(0,px-90),box.width-180)+"px";
+  wrap.dataset.idx=chartPts[wrap.dataset.chart].indexOf(best);
+}
+function hideTip(w){ const tp=w.querySelector(".tip"); if(tp&&!tp.hidden){ tp.hidden=true; w.querySelectorAll(".hover-line,.hover-dot").forEach(el=>el.setAttribute("visibility","hidden")) } }
+["pointermove","pointerdown"].forEach(ev=>document.addEventListener(ev,e=>{
+  const wrap=e.target.closest&&e.target.closest(".chart-wrap");
+  document.querySelectorAll(".chart-wrap").forEach(w=>{ if(w!==wrap && document.activeElement!==w.querySelector("svg")) hideTip(w) });
+  if(!wrap) return;
+  const svg=wrap.querySelector("svg"), pts=chartPts[wrap.dataset.chart]; if(!pts||!pts.length) return;
+  const box=svg.getBoundingClientRect(), vx=(e.clientX-box.left)/box.width*360;
+  let best=pts[0]; for(const p of pts){ if(Math.abs(p.x-vx)<=Math.abs(best.x-vx)) best=p }
+  showPoint(wrap,best);
+}));
+document.addEventListener("keydown",e=>{
+  const svg=e.target.closest&&e.target.closest(".chart-wrap svg"); if(!svg) return;
+  if(e.key!=="ArrowLeft"&&e.key!=="ArrowRight"&&e.key!=="Home"&&e.key!=="End") return;
+  e.preventDefault();
+  const wrap=svg.parentElement, pts=chartPts[wrap.dataset.chart];
+  let i = wrap.dataset.idx!==undefined ? +wrap.dataset.idx : pts.length-1;
+  i = e.key==="Home"?0 : e.key==="End"?pts.length-1 : Math.max(0,Math.min(pts.length-1,i+(e.key==="ArrowLeft"?-1:1)));
+  showPoint(wrap,pts[i]); announce(wrap.querySelector(".tip").textContent);
+});
+document.addEventListener("focusout",e=>{ const w=e.target.closest&&e.target.closest(".chart-wrap"); if(w) hideTip(w) });
+
+function wateringLog(p){
+  const ws=p.hist.filter(d=>d.w).slice(-5).reverse();
+  return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:14px">${t("wlog")}</b><span class="eyebrow">${t("wlog_count",{n:p.hist.filter(d=>d.w&&d.ts>=S.now-30*DAY).length})}</span></div>
+   ${ws.length?`<ul class="wlog">${ws.map(d=>`<li><span>💧 ${fmtWhen(d.ts)}</span><span>${t("wlog_row",{ml:d.w.ml,a:d.w.from,b:d.m})}</span></li>`).join("")}</ul>`:`<p class="plant-room" style="margin:6px 0 0">${t("wlog_empty")}</p>`}</div>`;
+}
+
+function quality(){
+  const all=Object.values(S.chats).flat().filter(m=>!m.me&&!m.sys), rated=all.filter(m=>m.rating);
+  const up=rated.filter(m=>m.rating==="up").length;
+  return {answers:all.length, rated:rated.length, up, rate:rated.length?Math.round(up/rated.length*100):null};
+}
+function qualityBadge(){
+  const q=quality(); if(q.rate===null) return `<div class="quality">${t("rate_hint")}</div>`;
+  return `<div class="quality"><span>${t("helpful_rate")}</span><b style="color:${q.rate>=80?"var(--green)":"var(--dry)"}">${q.rate}%</b><span>${t("rated",{up:q.up,n:q.rated})}</span></div>`;
+}
+/* Inside a claude.ai viewer the page asks Claude on the viewer's own account (they're asked first)
+   and saves files through the viewer; opened as a local file it uses an API key and normal downloads. */
+let viewerSample=null, viewerDownloads=null;
+if(window.claude && typeof window.claude.use==="function"){
+  window.claude.use("sample").then(s=>{ if(s){ viewerSample=s; render() } }, ()=>{});
+  window.claude.use("downloads").then(d=>{ viewerDownloads=d }, ()=>{});
+}
+const aiOn = ()=> S.ai.enabled && (!!viewerSample || !!apiKey);
+const aiName = ()=> viewerSample ? "Claude" : MODEL;
+
+// Two-tap confirmation (the artifact viewer doesn't show confirm() dialogs)
+let armed=null, armedTimer=null;
+function confirmTap(key){
+  clearTimeout(armedTimer);
+  if(armed===key){ armed=null; return true }
+  armed=key; armedTimer=setTimeout(()=>{ armed=null; render() },4000); render(); return false;
+}
+
+function sheetText(ids, sitter){
+  const lines=[`${t("sheet_title")}${sitter?" — "+t("sheet_for",{n:sitter}):""}`, t("sheet_made",{d:fmtDay(S.now)}), ""];
+  S.plants.filter(p=>ids.includes(p.id)).forEach(p=>{ const s=SP[p.sp], fc=forecast(p);
+    lines.push(`🌿 ${p.name} — ${p.room} (${s.common})`);
+    lines.push(`   ${stLabel(p)} · ${t("moisture")} ${p.m}% · ${t("soil_temp")} ${p.t} °C`);
+    lines.push(`   ${t("sheet_range",{a:s.m[0],b:s.m[1],c:s.t[0],d:s.t[1]})}`);
+    lines.push(`   ${fc.now?t("sheet_now")+" "+t("sheet_water",{ml:waterAmount(p),w:t("today")}):t("sheet_water",{ml:waterAmount({...p,m:s.m[0]}),w:fmtShort(fc.at)})}`);
+    if(p.notes) lines.push(`   ${t("sheet_note",{n:p.notes})}`);
+    lines.push("");
+  });
+  return lines.join("\n");
+}
+function sheetHtml(ids, sitter){
+  const rows=S.plants.filter(p=>ids.includes(p.id)).map(p=>{ const s=SP[p.sp], st=status(p), fc=forecast(p);
+    return `<article><h2>${esc(p.name)} <small>${esc(p.room)} · ${esc(s.common)}</small></h2><p class="st ${st.k}">${esc(stLabel(p))} · ${t("moisture")} ${p.m}% · ${t("soil_temp")} ${p.t} °C</p>
+    <p>${esc(fc.now?t("sheet_now")+" "+t("sheet_water",{ml:waterAmount(p),w:t("today")}):t("sheet_water",{ml:waterAmount({...p,m:s.m[0]}),w:fmtShort(fc.at)}))}</p>
+    <p class="muted">${esc(t("sheet_range",{a:s.m[0],b:s.m[1],c:s.t[0],d:s.t[1]}))}</p>${p.notes?`<p class="note">${esc(t("sheet_note",{n:p.notes}))}</p>`:""}</article>`}).join("");
+  return `<!doctype html><html lang="${S.lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(t("sheet_title"))}</title>
+<style>body{font:16px/1.5 system-ui,sans-serif;background:#F3F5F0;color:#17221B;margin:0;padding:24px 16px}main{max-width:640px;margin:0 auto}h1{margin:0 0 4px}article{background:#fff;border-radius:16px;padding:16px;margin:12px 0}h2{margin:0;font-size:20px}h2 small{font-size:13px;color:#4E5B52;font-weight:400}.st{font-weight:700;color:#1F5C3A}.st.dry,.st.wet{color:#A8432E}.st.cold{color:#2F5E8C}.muted{color:#4E5B52;font-size:14px}.note{background:#E3EFE6;border-radius:10px;padding:8px 10px}@media (prefers-color-scheme:dark){body{background:#0F1712;color:#E6EFE8}article{background:#18231C}.muted,h2 small{color:#A3B5A8}.note{background:#1D3326}.st{color:#6CC992}}</style></head>
+<body><main><h1>🌿 ${esc(t("sheet_title"))}</h1><p class="muted">${sitter?esc(t("sheet_for",{n:sitter}))+" · ":""}${esc(t("sheet_made",{d:fmtDay(S.now)}))}</p>${rows}</main></body></html>`;
+}
+
+async function download(text, name, type){
+  if(viewerDownloads){ try{ await viewerDownloads.save({filename:name, data:text}) }catch(e){ if(e&&e.code!=="declined") announce(t("dl_fail")) } return }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; document.body.appendChild(a); a.click(); a.remove();
+}
+
+function errText(e){
+  if(e && e.code){ const pt=S.lang==="pt"; return {not_granted:pt?"não deste permissão":"permission not given", rate_limited:pt?"demasiados pedidos, tenta daqui a pouco":"too many requests, try again shortly"}[e.code] || e.code }
+  const st=e&&e.status, pt=S.lang==="pt";
+  if(st===401) return pt?"chave da API inválida":"invalid API key";
+  if(st===403) return pt?"a chave não tem permissão":"the key doesn't have permission";
+  if(st===429) return pt?"demasiados pedidos, tenta daqui a pouco":"too many requests, try again shortly";
+  if(st>=500) return pt?`erro do serviço (${st})`:`service error (${st})`;
+  if(!st) return pt?"sem ligação à internet ou bloqueado":"no internet connection, or blocked";
+  return `${st}`;
+}
+
+// Downscale photos before use: a ~1024px JPEG for the AI, a small thumbnail for the chat history
+function readImage(file){
+  return new Promise((res,rej)=>{ const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=()=>{ const draw=max=>{ const k=Math.min(1,max/Math.max(img.width,img.height)), c=document.createElement("canvas"); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k); c.getContext("2d").drawImage(img,0,0,c.width,c.height); return c.toDataURL("image/jpeg",0.85) };
+      res({full:draw(1024), thumb:draw(220)}); URL.revokeObjectURL(url) };
+    img.onerror=rej; img.src=url; });
+}
+
+// Loaded from the CDN only when the real AI is used, so nothing leaves the computer otherwise
+let clientPromise=null, clientKey="";
+async function getClient(){
+  if(!clientPromise || clientKey!==apiKey){
+    clientKey=apiKey;
+    clientPromise=import("https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.131.0/+esm")
+      .then(m=>new (m.default||m.Anthropic)({apiKey, dangerouslyAllowBrowser:true}));
+  }
+  return clientPromise;
+}
+// System prompt from the portfolio's Prompt Engineering section, filled with this plant's data
+function systemPrompt(p){
+  const s=SP[p.sp], h=p.hist.filter(d=>d.ts>S.now-7*DAY);
+  const daily=[]; for(let i=6;i>=0;i--){ const day=h.filter(d=>d.ts>S.now-(i+1)*DAY&&d.ts<=S.now-i*DAY); if(day.length) daily.push(day) }
+  const avg=(arr,k)=>(arr.reduce((a,d)=>a+d[k],0)/arr.length).toFixed(1);
+  const waterings=h.filter(d=>d.w).map(d=>`${fmtWhen(d.ts)} (~${d.w.ml} ml, ${d.w.from}% → ${d.m}%)`).join("; ")||"none";
+  return `You are FloraSense Coach, a friendly plant-care assistant.
+Use ONLY the care passages and sensor data provided below.
+Plant: ${s.name} ("${p.name}") | Pot: ~${s.pot} ml watering volume | Location: ${p.room}, Portugal
+Last 7 days (daily averages, oldest first): moisture ${daily.map(d=>avg(d,"m")).join(", ")}%, soil temp ${daily.map(d=>avg(d,"t")).join(", ")} °C
+Current reading: moisture ${p.m}%, soil temp ${p.t} °C. Waterings in the last 7 days: ${waterings}
+Ideal range for this species: moisture ${s.m[0]}-${s.m[1]}%, temp ${s.t[0]}-${s.t[1]} °C
+Care passages: ${s.name} (${s.common}) prefers soil moisture between ${s.m[0]}% and ${s.m[1]}% and soil temperature between ${s.t[0]} and ${s.t[1]} °C. In typical indoor conditions it dries about ${s.dry}% per day. A normal watering for its pot is about ${s.pot} ml of room-temperature water, given slowly until it drains. Owner notes: ${p.notes||"none"}.
+Rules:
+- Answer in 3 short sentences max, then one clear action.
+- Say whether each reading is in range, too low or too high.
+- If the data or passages do not answer the question, say so and suggest a local nursery.
+- Never give pesticide doses, pet-toxicity or human-health advice.
+- If the user sends a photo, describe only the visible symptoms, relate them to the readings, and don't claim a definite diagnosis.
+- Reply in ${S.lang==="pt"?"European Portuguese":"English"}, as plain text without markdown.`;
+}
+async function claudeAnswer(p, q, imageDataUrl){
+  if(viewerSample) return viewerAnswer(p, q, imageDataUrl);
+  const client=await getClient();
+  // recent turns for this plant, so follow-up questions have context
+  const prior=(S.chats[p.id]||[]).slice(0,-1).filter(m=>!m.sys).slice(-8)
+    .map(m=>({role:m.me?"user":"assistant", content:m.text}));
+  while(prior.length && prior[0].role!=="user") prior.shift();
+  const content=[];
+  if(imageDataUrl) content.push({type:"image", source:{type:"base64", media_type:"image/jpeg", data:imageDataUrl.split(",")[1]}});
+  content.push({type:"text", text:q});
+  const res=await client.beta.messages.create({
+    model:MODEL, max_tokens:16000,
+    output_config:{effort:"low"},                       // short chat answers
+    betas:["server-side-fallback-2026-07-01"], fallbacks:"default",
+    system:systemPrompt(p),
+    messages:[...prior, {role:"user", content}],
+  });
+  if(res.stop_reason==="refusal") return t("ai_refused");
+  const text=res.content.filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+  if(!text) throw new Error("empty answer");
+  return text;
+}
+async function testAI(){
+  const out=()=>{ const el=$("#aitest"); if(el) el.textContent=aiTest };
+  if(!apiKey){ aiTest=t("s_need_key"); out(); return }
+  aiTest=t("s_testing"); out();
+  try{ const client=await getClient(); await client.models.retrieve(MODEL); aiTest=t("s_ok") }
+  catch(err){ aiTest=t("s_fail",{e:errText(err)}) }
+  out();
+}
+
+
+// Same prompt, sent through the viewer (memoryless: instructions, data and recent turns go in the input)
+async function viewerAnswer(p, q, imageDataUrl){
+  const prior=(S.chats[p.id]||[]).slice(0,-1).filter(m=>!m.sys).slice(-8).map(m=>`${m.me?"User":"Coach"}: ${m.text}`).join("\n");
+  const input=`${systemPrompt(p)}\n\n${prior?"Conversation so far:\n"+prior+"\n\n":""}User question: ${q}${imageDataUrl?"\n(The user attached a photo of a leaf from this plant.)":""}`;
+  const opts={cache:false};
+  if(imageDataUrl){
+    const lim=await viewerSample.limits().catch(()=>null);
+    if(!lim||!lim.images) throw {code:"images_unavailable"};
+    const bin=atob(imageDataUrl.split(",")[1]), bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    opts.images=[new Blob([bytes],{type:"image/jpeg"})];
+  }
+  const {text}=await viewerSample(input, opts);
+  if(!text||!text.trim()) throw new Error("empty answer");
+  return text.trim();
+}
+
+</script>
+<script>
+/* FloraSense Home map: plants placed on a floor plan, a room overlay (status, drying speed,
+   soil temperature) and a per-room verdict: is a problem the room's, or one plant's?
+   The probe measures SOIL moisture and temperature, not air humidity, so "drying speed"
+   (a plant's drying rate against its species' normal) stands in for dry air, sun or heat.
+   Used by the web app and both phone apps. Each page defines S, save(), render() and hmOpenPlant(id). */
+
+Object.assign(TXT.en, {
+  nav_home:"Home map", hm_title:"Home map", hm_open:"🏠 Home map",
+  hm_lead:"Drag a plant to where it really stands. The map checks whether a problem belongs to the room or to one plant.",
+  hm_status:"Status", hm_drying:"Drying speed", hm_temp:"Soil temp",
+  hm_leg_status:"Worst plant status in the room", hm_leg_dry:"Drying speed vs. what's normal for each species", hm_leg_temp:"Soil temperature vs. each species' range",
+  hm_slow:"Slower", hm_normal:"Normal", hm_fast:"Faster", hm_cold:"Cold", hm_ok:"In range", hm_warm:"Warm",
+  hm_window:"Window", hm_rooms:"Rooms", hm_empty:"No plants here", hm_move:"Move to", hm_inside:"inside", hm_bywin:"by the window",
+  hm_v_room:"Room problem", hm_v_plant:"Plant problem", hm_v_single:"Can't tell yet", hm_v_ok:"Looks good",
+  hm_room_cold:"{n} of {m} plants here have cold soil. Likely a cold window or a draft: move them, don't water more.",
+  hm_room_warm:"{n} of {m} plants here have warm soil. Likely a radiator or strong sun: move them away from the heat.",
+  hm_room_fast:"{n} of {m} plants here dry faster than normal for their species. Likely dry air, sun or heating.",
+  hm_room_wet:"{n} of {m} plants here stay too wet. Likely low light or cold: water less, check drainage.",
+  hm_room_dry:"{n} of {m} plants here are too dry. Check whether this room gets more sun or heat.",
+  hm_plant:"Only {p} is off ({issue}); the other plants here are fine, so the room isn't the cause.",
+  hm_single:"Only one probe in this room, so it can't separate room from plant. {p} is {issue}.",
+  hm_ok_t:"All {m} plant(s) are in range here.",
+  iss_cold:"too cold", iss_warm:"too warm", iss_dry:"too dry", iss_wet:"too wet", iss_fast:"drying fast",
+  hm_moved:"{p} moved to {r}", hm_air:"The probe measures soil, not air humidity. A Gen 2 air sensor would confirm dry-air rooms.",
+  r_living:"Living room", r_kitchen:"Kitchen", r_bedroom:"Bedroom", r_bathroom:"Bathroom", r_office:"Office", r_balcony:"Balcony", win_suffix:" · by the window",
+  hm_dry_x:"{r}× normal"
+});
+Object.assign(TXT.pt, {
+  nav_home:"Mapa da casa", hm_title:"Mapa da casa", hm_open:"🏠 Mapa da casa",
+  hm_lead:"Arrasta cada planta para onde ela está. O mapa verifica se um problema é da divisão ou de uma planta.",
+  hm_status:"Estado", hm_drying:"Secagem", hm_temp:"Temp. do solo",
+  hm_leg_status:"Pior estado das plantas da divisão", hm_leg_dry:"Velocidade de secagem face ao normal de cada espécie", hm_leg_temp:"Temperatura do solo face ao intervalo de cada espécie",
+  hm_slow:"Mais lenta", hm_normal:"Normal", hm_fast:"Mais rápida", hm_cold:"Frio", hm_ok:"No intervalo", hm_warm:"Quente",
+  hm_window:"Janela", hm_rooms:"Divisões", hm_empty:"Sem plantas", hm_move:"Mudar para", hm_inside:"interior", hm_bywin:"junto à janela",
+  hm_v_room:"Problema da divisão", hm_v_plant:"Problema da planta", hm_v_single:"Ainda não dá para saber", hm_v_ok:"Tudo bem",
+  hm_room_cold:"{n} de {m} plantas aqui têm o solo frio. Provavelmente uma janela fria ou corrente de ar: muda-as de sítio, não regues mais.",
+  hm_room_warm:"{n} de {m} plantas aqui têm o solo quente. Provavelmente um radiador ou sol forte: afasta-as do calor.",
+  hm_room_fast:"{n} de {m} plantas aqui secam mais depressa do que o normal da espécie. Provavelmente ar seco, sol ou aquecimento.",
+  hm_room_wet:"{n} de {m} plantas aqui ficam molhadas demais. Provavelmente pouca luz ou frio: rega menos, verifica a drenagem.",
+  hm_room_dry:"{n} de {m} plantas aqui estão secas. Vê se esta divisão apanha mais sol ou calor.",
+  hm_plant:"Só {p} está mal ({issue}); as outras plantas daqui estão bem, por isso a divisão não é a causa.",
+  hm_single:"Só há uma sonda nesta divisão, por isso não dá para separar divisão de planta. {p} está {issue}.",
+  hm_ok_t:"As {m} planta(s) daqui estão no intervalo.",
+  iss_cold:"com frio", iss_warm:"com calor", iss_dry:"seca", iss_wet:"molhada demais", iss_fast:"a secar depressa",
+  hm_moved:"{p} mudada para {r}", hm_air:"A sonda mede o solo, não a humidade do ar. Um sensor de ar na Gen 2 confirmaria as divisões com ar seco.",
+  r_living:"Sala", r_kitchen:"Cozinha", r_bedroom:"Quarto", r_bathroom:"Casa de banho", r_office:"Escritório", r_balcony:"Varanda", win_suffix:" · junto à janela",
+  hm_dry_x:"{r}× o normal"
+});
+
+/* ---------- floor plan (viewBox 600 x 440) ---------- */
+const HM_ROOMS = [
+  {id:"balcony",  x:0,   y:0,   w:330, h:50,  match:/balcon|varanda/i,               win:[]},
+  {id:"living",   x:0,   y:50,  w:330, h:180, match:/living|sala|lounge/i,           win:[[0,95,0,195]]},
+  {id:"kitchen",  x:330, y:0,   w:270, h:230, match:/kitchen|cozinha/i,              win:[[420,0,540,0]]},
+  {id:"bedroom",  x:0,   y:230, w:230, h:210, match:/bed|quarto/i,                   win:[[0,285,0,395]]},
+  {id:"bathroom", x:230, y:230, w:130, h:210, match:/bath|banho|wc/i,                win:[[260,440,330,440]]},
+  {id:"office",   x:360, y:230, w:240, h:210, match:/office|escrit|study/i,          win:[[600,265,600,410],[420,440,560,440]]},
+];
+const roomName = id => t("r_"+id);
+function roomOf(p){
+  if(p.pos){ const r=HM_ROOMS.find(r=>p.pos.x>=r.x&&p.pos.x<=r.x+r.w&&p.pos.y>=r.y&&p.pos.y<=r.y+r.h); if(r) return r }
+  return HM_ROOMS.find(r=>r.match.test(p.room)) || HM_ROOMS[1];
+}
+function distToSeg(px,py,[x1,y1,x2,y2]){ const dx=x2-x1, dy=y2-y1, l=dx*dx+dy*dy||1; let k=((px-x1)*dx+(py-y1)*dy)/l; k=Math.max(0,Math.min(1,k)); return Math.hypot(px-(x1+k*dx), py-(y1+k*dy)) }
+const nearWindow = (room,pos) => room.win.some(w=>distToSeg(pos.x,pos.y,w)<=55);
+function spotIn(room, byWindow, i=0){
+  if(byWindow && room.win.length){ const [x1,y1,x2,y2]=room.win[0], k=[0.25,0.75,0.5][i%3];
+    const mx=x1+(x2-x1)*k, my=y1+(y2-y1)*k, cx=room.x+room.w/2, cy=room.y+room.h/2, d=Math.hypot(cx-mx,cy-my)||1;
+    return {x:mx+(cx-mx)/d*32, y:my+(cy-my)/d*32} }
+  const c=i%2, r=Math.floor(i/2);   // two well-spaced columns so names don't collide
+  return {x:room.x+room.w*(0.28+0.44*c), y:room.y+Math.min(room.h-34, room.h*0.42+r*56)};
+}
+function ensurePositions(){
+  const count={};
+  S.plants.forEach(p=>{ if(p.pos) return; const room=HM_ROOMS.find(r=>r.match.test(p.room))||HM_ROOMS[1];
+    const k=room.id+(/window|janela/i.test(p.room)?"w":""); count[k]=(count[k]||0);
+    p.pos=spotIn(room, /window|janela/i.test(p.room), count[k]++) });
+}
+// Two extra demo plants so a room can be compared with itself (used by the apps' fresh())
+function homeDemoPlants(){
+  return [
+    {id:6, probe:"FS-1990", sp:"spa-wal", name:"Peace lily", room:"Office · by the window", m:55, t:15.0, batt:91, notes:""},
+    {id:7, probe:"FS-2007", sp:"san-tri", name:"Snake plant", room:"Bedroom", m:22, t:20.9, batt:83, notes:""},
+  ].map(p=>({...p, hist:backfill(p,30)}));
+}
+
+/* ---------- analysis ---------- */
+function plantIssue(p){
+  const s=SP[p.sp], st=status(p).k, ratio=dryRate(p)/s.dry;
+  if(st==="cold"||st==="warm"||st==="dry"||st==="wet") return {k:st, ratio};
+  if(ratio>=1.35) return {k:"fast", ratio};
+  return {k:null, ratio};
+}
+function roomAnalysis(){
+  ensurePositions();
+  return HM_ROOMS.map(room=>{
+    const ps=S.plants.filter(p=>roomOf(p)===room).map(p=>({p, ...plantIssue(p), tOff:+(p.t-(SP[p.sp].t[0]+SP[p.sp].t[1])/2).toFixed(1)}));
+    const m=ps.length, bad=ps.filter(x=>x.k);
+    const avgRatio=m?ps.reduce((a,x)=>a+x.ratio,0)/m:1;
+    const coldN=ps.filter(x=>x.k==="cold"||(x.p.t<SP[x.p.sp].t[0]+1)).length, warmN=ps.filter(x=>x.k==="warm").length;
+    const tBucket = !m?null : coldN/m>=0.5?"cold" : warmN/m>=0.5?"warm" : "ok";
+    const dBucket = !m?null : avgRatio>=1.3?"fast" : avgRatio<=0.75?"slow" : "normal";
+    const worst = ps.map(x=>status(x.p).k).sort((a,b)=>({dry:0,wet:1,cold:2,warm:3,ok:4}[a]-{dry:0,wet:1,cold:2,warm:3,ok:4}[b]))[0] || null;
+    let v;
+    if(!m) v={kind:"empty"};
+    else if(!bad.length) v={kind:"ok", text:t("hm_ok_t",{m})};
+    else if(m===1) v={kind:"single", issue:bad[0].k, text:t("hm_single",{p:esc(bad[0].p.name), issue:t("iss_"+bad[0].k)})};
+    else {
+      // the most common issue in the room; a room problem when at least 2 plants and half the room share it
+      const counts={}; bad.forEach(x=>counts[x.k]=(counts[x.k]||0)+1);
+      const [issue,n]=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+      if(n>=2 && n/m>=0.5) v={kind:"room", issue, n, text:t("hm_room_"+issue,{n,m})};
+      else { const x=bad[0]; v={kind:"plant", issue:x.k, text:t("hm_plant",{p:esc(x.p.name), issue:t("iss_"+x.k)})} }
+    }
+    return {room, id:room.id, name:roomName(room.id), plants:ps, verdict:v, worst, tBucket, dBucket, avgRatio};
+  });
+}
+
+/* ---------- view ---------- */
+let hmMode="status";
+const HM_FILL = {
+  status:a=>a.worst?colorFor(a.worst):null,
+  drying:a=>a.dBucket==="fast"?"var(--dry)":a.dBucket==="slow"?"var(--wet)":a.dBucket?"var(--ok)":null,
+  temp:a=>a.tBucket==="cold"?"var(--cold)":a.tBucket==="warm"?"var(--warm)":a.tBucket?"var(--ok)":null,
+};
+function homeMapSVG(an){
+  const rooms=an.map(a=>{ const r=a.room, f=HM_FILL[hmMode](a);
+    return `<g class="hm-room"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" style="fill:${f||"var(--card)"};fill-opacity:${f?.18:1};stroke:var(--line2)" stroke-width="2"/>
+      <text class="hm-rlabel" x="${r.x+10}" y="${r.y+20}">${esc(a.name)}</text>
+      ${a.verdict.kind==="room"?`<text class="hm-flag" x="${r.x+r.w-10}" y="${r.y+20}" text-anchor="end">⚠ ${t("hm_v_room")}</text>`:""}
+      ${hmMode==="drying"&&a.plants.length?`<text class="hm-rsub" x="${r.x+10}" y="${r.y+38}">${t("hm_dry_x",{r:a.avgRatio.toLocaleString(LOCALE(),{maximumFractionDigits:1})})}</text>`:""}</g>` }).join("");
+  const wins=HM_ROOMS.flatMap(r=>r.win).map(([x1,y1,x2,y2])=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="hm-win"/>`).join("");
+  const dots=S.plants.map(p=>{ const k=status(p).k;
+    return `<g class="hm-plant" data-hmp="${p.id}" transform="translate(${p.pos.x} ${p.pos.y})" tabindex="-1">
+      <circle r="13" style="fill:${colorFor(k)};stroke:var(--card)" stroke-width="3"/>
+      ${p.pos.x>550?`<text class="hm-plabel" x="-19" y="5" text-anchor="end">${esc(p.name)}</text>`   // near a side wall: label on the inner side
+        :p.pos.x<50?`<text class="hm-plabel" x="19" y="5" text-anchor="start">${esc(p.name)}</text>`
+        :`<text class="hm-plabel" y="28" text-anchor="middle">${esc(p.name)}</text>`}<title>${esc(p.name)}: ${stLabel(p)}, ${p.m}% · ${p.t} °C</title></g>` }).join("");
+  return `<svg class="hm-svg" id="hm-svg" viewBox="-6 -6 612 452" role="img" aria-label="${t("hm_title")}">
+    <rect x="-4" y="-4" width="608" height="448" rx="6" style="fill:none;stroke:var(--ink)" stroke-width="3"/>${rooms}${wins}${dots}</svg>`;
+}
+function homeMapLegend(){
+  const items = hmMode==="status" ? [["var(--ok)",t("st_ok")],["var(--dry)",t("st_dry")],["var(--cold)",t("st_cold")],["var(--wet)",t("st_wet")],["var(--warm)",t("st_warm")]]
+    : hmMode==="drying" ? [["var(--wet)",t("hm_slow")],["var(--ok)",t("hm_normal")],["var(--dry)",t("hm_fast")]]
+    : [["var(--cold)",t("hm_cold")],["var(--ok)",t("hm_ok")],["var(--warm)",t("hm_warm")]];
+  return `<div class="hm-legend"><span class="plant-room">${t(hmMode==="status"?"hm_leg_status":hmMode==="drying"?"hm_leg_dry":"hm_leg_temp")}</span>${items.map(([c,l])=>`<span><i style="background:${c}"></i>${l}</span>`).join("")}<span><i class="hm-wkey"></i>${t("hm_window")}</span></div>`;
+}
+function moveOptions(p){
+  const cur=roomOf(p).id+(nearWindow(roomOf(p),p.pos)?":w":":i");
+  return HM_ROOMS.flatMap(r=>[[r.id+":i",`${roomName(r.id)} · ${t("hm_inside")}`], ...(r.win.length?[[r.id+":w",`${roomName(r.id)} · ${t("hm_bywin")}`]]:[])])
+    .map(([v,l])=>`<option value="${v}" ${v===cur?"selected":""}>${l}</option>`).join("");
+}
+function homeMapCards(an){
+  const order={room:0,plant:1,single:2,ok:3,empty:4};
+  return an.filter(a=>a.plants.length).sort((a,b)=>order[a.verdict.kind]-order[b.verdict.kind]).map(a=>{ const v=a.verdict;
+    const pill = v.kind==="room"?"s-dry":v.kind==="plant"?"s-warm":v.kind==="single"?"s-cold":"s-ok";
+    return `<div class="card hm-card"><div class="hm-chead"><b>${esc(a.name)}</b><span class="pill ${pill}">${t("hm_v_"+v.kind)}</span></div>
+      <p class="hm-vtext">${v.text}</p>
+      <ul class="hm-plist">${a.plants.map(x=>`<li><button class="hm-pname" data-hmopen="${x.p.id}"><span class="hm-dot" style="background:${colorFor(status(x.p).k)}"></span>${esc(x.p.name)}</button>
+        <span class="plant-room">${x.p.m}% · ${x.p.t} °C</span>
+        <label class="sr" for="hmmove-${x.p.id}">${t("hm_move")} (${esc(x.p.name)})</label><select class="field hm-move" id="hmmove-${x.p.id}" data-hmmove="${x.p.id}">${moveOptions(x.p)}</select></li>`).join("")}</ul></div>` }).join("");
+}
+function homeMapView(){
+  const an=roomAnalysis();
+  return `<p class="plant-room hm-lead">${t("hm_lead")}</p>
+   <div class="seg2 hm-modes" role="group" aria-label="Overlay">${[["status","hm_status"],["drying","hm_drying"],["temp","hm_temp"]].map(([k,l])=>`<button data-hmmode="${k}" class="${hmMode===k?"on":""}" aria-pressed="${hmMode===k}">${t(l)}</button>`).join("")}</div>
+   <div class="hm-layout"><div class="hm-mapcol"><div class="card hm-mapcard">${homeMapSVG(an)}</div>${homeMapLegend()}<p class="plant-room hm-air">${t("hm_air")}</p></div>
+   <div class="hm-cards"><h2 class="hm-h">${t("hm_rooms")}</h2>${homeMapCards(an)}</div></div>`;
+}
+
+/* ---------- moving plants ---------- */
+function placePlant(p, pos){
+  pos={x:Math.max(8,Math.min(592,pos.x)), y:Math.max(8,Math.min(432,pos.y))};
+  const room=HM_ROOMS.find(r=>pos.x>=r.x&&pos.x<=r.x+r.w&&pos.y>=r.y&&pos.y<=r.y+r.h)||HM_ROOMS[1];
+  p.pos=pos; p.room=roomName(room.id)+(nearWindow(room,pos)?t("win_suffix"):"");
+  save(); render(); announce(t("hm_moved",{p:p.name, r:p.room}));
+}
+let hmDrag=null;
+document.addEventListener("pointerdown",e=>{
+  const g=e.target.closest&&e.target.closest(".hm-plant"); if(!g) return;
+  const svg=g.ownerSVGElement; e.preventDefault();
+  hmDrag={g, svg, id:+g.dataset.hmp, start:{x:e.clientX,y:e.clientY}, moved:false};
+  try{ g.setPointerCapture(e.pointerId) }catch(err){}   // not every pointer can be captured
+  g.classList.add("dragging");
+});
+document.addEventListener("pointermove",e=>{
+  if(!hmDrag) return;
+  if(Math.hypot(e.clientX-hmDrag.start.x, e.clientY-hmDrag.start.y)>4) hmDrag.moved=true;
+  if(!hmDrag.moved) return;
+  const pt=hmDrag.svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+  const q=pt.matrixTransform(hmDrag.svg.getScreenCTM().inverse());
+  hmDrag.g.setAttribute("transform",`translate(${q.x} ${q.y})`); hmDrag.pos={x:q.x,y:q.y};
+});
+document.addEventListener("pointerup",()=>{
+  if(!hmDrag) return; const d=hmDrag; hmDrag=null; d.g.classList.remove("dragging");
+  const p=S.plants.find(x=>x.id===d.id); if(!p) return;
+  if(d.moved && d.pos) placePlant(p, d.pos); else hmOpenPlant(p.id);
+});
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.hmmode){ hmMode=b.dataset.hmmode; render() }
+  else if(b.dataset.hmopen){ hmOpenPlant(+b.dataset.hmopen) }
+});
+document.addEventListener("change",e=>{
+  const id=e.target.dataset&&e.target.dataset.hmmove; if(!id) return;
+  const p=S.plants.find(x=>x.id===+id), [rid,spot]=e.target.value.split(":"), room=HM_ROOMS.find(r=>r.id===rid);
+  const others=S.plants.filter(x=>x!==p&&roomOf(x)===room).length;
+  placePlant(p, spotIn(room, spot==="w", others));
+});
+
+</script>
+<script>
+/* FloraSense Plant Agent: give it a goal ("I'm away 10–20 Nov"), it reads the plants with the
+   page's own tools, proposes actions, and changes nothing until the owner approves each one.
+   Planner: Claude through the claude.ai viewer (page tools), Claude through an API key (tool-use
+   loop), or local rules when the real AI is off. Expects the page to define S, render(), and page. */
+
+Object.assign(TXT.en, {
+  nav_agent:"Plant Agent", tab_agent:"Agent",
+  ag_title:"Plant Agent", ag_level:"Level 2 autonomy · reads your plants on its own, acts only with your approval",
+  ag_goal:"What should the agent take care of?", ag_goal_ph:"e.g. I'm away from 10 to 20 November",
+  ag_ex1:"I'm away from 10 to 20 November", ag_ex2:"A cold week is coming", ag_ex3:"Get the Calathea back in range", ag_ex4:"Plan this week's watering",
+  ag_run:"Run agent", ag_stop:"Stop", ag_running:"Working…", ag_by_claude:"Planned by Claude", ag_by_local:"Planned by local rules",
+  ag_local_hint:"Using local rules. Turn on the real AI Coach in Settings to let Claude plan.",
+  ag_steps:"What the agent did", ag_plan:"Plan", ag_actions:"Proposed actions", ag_none:"No actions proposed.",
+  ag_approve:"Approve", ag_decline:"Decline", ag_approve_all:"Approve all", ag_approved:"Approved", ag_declined:"Declined",
+  ag_summary:"{a} approved · {d} declined", ag_pending_n:"{n} waiting for your approval",
+  ag_after:"Approved actions are now live: reminders show in Alerts when due, and the agent's vacation watch appears below.",
+  st_check:"Checked all {n} plants", st_rooms:"Checked the home map ({n} rooms)", st_forecast:"Forecast waterings until {d}", st_propose:"Proposed {n} action(s)", st_error:"Tool error: {e}",
+  act_reminder:"Reminder", act_note:"Add note", act_sitter:"Plant-sitter sheet", act_vacation:"Vacation watch",
+  ag_vac_on:"Vacation watch: {a} – {b}", ag_vac_d:"The agent watches the readings while you're away and flags any plant the sitter needs to water.",
+  ag_end_vac:"End vacation watch", ag_reminders:"Upcoming reminders", ag_no_rem:"No reminders yet.", ag_done:"Done",
+  ag_sheets:"Plant-sitter sheets", ag_copy:"Copy", ag_copied:"Copied ✓", ag_history:"Earlier runs",
+  rem_due:"Reminders due", ag_err:"The agent couldn't finish ({e}). Try again, or turn the real AI off to use local rules.",
+  // local planner text
+  lp_vac:"You're away {a} – {b} ({n} days). {k} of {total} plants will need water while you're away, so I propose a plant-sitter sheet and dated reminders. I'll also add a watering reminder for the day before you leave and turn on the vacation watch.",
+  lp_vac_none:"You're away {a} – {b}. None of your plants should need water while you're away if you water before leaving, so I only propose a pre-trip watering reminder and the vacation watch.",
+  lp_cold:"Soil temperature matters more than air temperature for roots. {k} plant(s) are close to or below their minimum soil temperature, so I propose moving them away from cold windows and checking again in 2 days.",
+  lp_coldroom:"The home map shows a room problem in {r}: the window there is the cause, not the plants.", lp_cold_none:"All plants have soil temperature comfortably inside their range. I propose one reminder to re-check in 3 days.",
+  lp_plant:"{p} is at {m}% moisture (ideal {a}–{b}%). I propose a reminder {when} and a note so whoever waters it uses about {ml} ml.",
+  lp_week:"I checked every plant and forecast the next 7 days. Waterings fall on {k} day(s); I propose one reminder per day listing what to water.",
+  lp_fallback:"I checked all plants. {k} need attention now; I propose reminders for those. For other goals, try asking about a trip, cold weather or a specific plant.",
+  r_pretrip:"Before you leave, water: {p}", r_visit:"Sitter visit: water {list}", r_waterday:"Water {list}", r_sitter:"Sitter: water {p} (~{ml} ml)", r_cold:"Move {p} away from the cold window", r_check:"Re-check soil temperatures", r_water:"Water {p} (~{ml} ml)",
+  n_cold:"Keep away from cold windows in winter; soil below {t} °C slows the roots.", n_water:"Water slowly with ~{ml} ml of room-temperature water until it drains."
+});
+Object.assign(TXT.pt, {
+  nav_agent:"Agente", tab_agent:"Agente",
+  ag_title:"Agente das plantas", ag_level:"Autonomia nível 2 · lê as plantas sozinho, só age com a tua aprovação",
+  ag_goal:"De que é que o agente deve tratar?", ag_goal_ph:"ex. Vou estar fora de 10 a 20 de novembro",
+  ag_ex1:"Vou estar fora de 10 a 20 de novembro", ag_ex2:"Vem aí uma semana fria", ag_ex3:"Põe a Calathea de volta ao intervalo", ag_ex4:"Planeia as regas desta semana",
+  ag_run:"Executar agente", ag_stop:"Parar", ag_running:"A trabalhar…", ag_by_claude:"Planeado pelo Claude", ag_by_local:"Planeado por regras locais",
+  ag_local_hint:"A usar regras locais. Ativa o AI Coach real nas Definições para o Claude planear.",
+  ag_steps:"O que o agente fez", ag_plan:"Plano", ag_actions:"Ações propostas", ag_none:"Nenhuma ação proposta.",
+  ag_approve:"Aprovar", ag_decline:"Recusar", ag_approve_all:"Aprovar todas", ag_approved:"Aprovada", ag_declined:"Recusada",
+  ag_summary:"{a} aprovadas · {d} recusadas", ag_pending_n:"{n} à espera da tua aprovação",
+  ag_after:"As ações aprovadas já estão ativas: os lembretes aparecem nos Alertas quando chegar a data, e a vigilância de férias aparece abaixo.",
+  st_check:"Verificou as {n} plantas", st_rooms:"Verificou o mapa da casa ({n} divisões)", st_forecast:"Previu as regas até {d}", st_propose:"Propôs {n} ação(ões)", st_error:"Erro na ferramenta: {e}",
+  act_reminder:"Lembrete", act_note:"Adicionar nota", act_sitter:"Folha para quem cuida", act_vacation:"Vigilância de férias",
+  ag_vac_on:"Vigilância de férias: {a} – {b}", ag_vac_d:"O agente acompanha as leituras enquanto estás fora e assinala as plantas que quem cuida tem de regar.",
+  ag_end_vac:"Terminar vigilância", ag_reminders:"Próximos lembretes", ag_no_rem:"Ainda não há lembretes.", ag_done:"Feito",
+  ag_sheets:"Folhas para quem cuida", ag_copy:"Copiar", ag_copied:"Copiado ✓", ag_history:"Execuções anteriores",
+  rem_due:"Lembretes para hoje", ag_err:"O agente não conseguiu terminar ({e}). Tenta outra vez, ou desliga a IA real para usar as regras locais.",
+  lp_vac:"Vais estar fora de {a} a {b} ({n} dias). {k} de {total} plantas vão precisar de água enquanto estás fora, por isso proponho uma folha para quem cuida e lembretes com data. Proponho também um lembrete para regar na véspera e ativar a vigilância de férias.",
+  lp_vac_none:"Vais estar fora de {a} a {b}. Se regares antes de sair, nenhuma planta deve precisar de água, por isso proponho só um lembrete para regar antes de saíres e a vigilância de férias.",
+  lp_cold:"Para as raízes conta a temperatura do solo, não a do ar. {k} planta(s) estão perto ou abaixo da temperatura mínima, por isso proponho afastá-las das janelas frias e voltar a verificar daqui a 2 dias.",
+  lp_coldroom:"O mapa da casa mostra um problema da divisão em {r}: a causa é a janela, não as plantas.", lp_cold_none:"Todas as plantas têm a temperatura do solo bem dentro do intervalo. Proponho só um lembrete para voltar a verificar daqui a 3 dias.",
+  lp_plant:"{p} está com {m}% de humidade (ideal {a}–{b}%). Proponho um lembrete {when} e uma nota para quem regar usar cerca de {ml} ml.",
+  lp_week:"Verifiquei todas as plantas e previ os próximos 7 dias. As regas caem em {k} dia(s); proponho um lembrete por dia com o que regar.",
+  lp_fallback:"Verifiquei todas as plantas. {k} precisam de atenção agora; proponho lembretes para essas. Para outros objetivos, pergunta sobre uma viagem, tempo frio ou uma planta específica.",
+  r_pretrip:"Antes de saíres, regar: {p}", r_visit:"Visita de quem cuida: regar {list}", r_waterday:"Regar {list}", r_sitter:"Quem cuida: regar {p} (~{ml} ml)", r_cold:"Afastar {p} da janela fria", r_check:"Voltar a verificar a temperatura do solo", r_water:"Regar {p} (~{ml} ml)",
+  n_cold:"No inverno, manter longe de janelas frias; solo abaixo de {t} °C abranda as raízes.", n_water:"Regar devagar com ~{ml} ml de água à temperatura ambiente até escorrer."
+});
+
+/* ---------------- state ---------------- */
+function AG(){ return (S.agent ||= {runs:[], reminders:[], sheets:[], vacation:null, nextId:1}) }
+let agRun=null, agCtl=null, agGoal="", agCopied=null;
+const isoDay = ts => { const d=new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}` };
+const dayTs = iso => { const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||"")); if(!m) return null; return new Date(+m[1],+m[2]-1,+m[3],9).getTime() };
+const fmtD = ts => new Date(ts).toLocaleDateString(LOCALE(),{weekday:"short",day:"numeric",month:"short"});
+const plantById = id => S.plants.find(p=>p.id===Number(id));
+
+/* ---------------- the page's tools (shared by every planner) ---------------- */
+function waterSchedule(p, untilTs){
+  // simulate drying day by day; a watering brings the soil back to mid-range
+  const s=SP[p.sp], rate=dryRate(p), mid=(s.m[0]+s.m[1])/2, out=[];
+  let m=p.m, ts=S.now;
+  if(m<s.m[0]){ out.push(ts); m=mid+(s.m[1]-mid)*0.4 }
+  while(ts<untilTs && out.length<20){ ts+=86400e3; m-=rate; if(m<s.m[0]){ out.push(ts); m=mid+(s.m[1]-mid)*0.4 } }
+  return out;
+}
+const TOOLS = [
+  { name:"check_plants",
+    description:"Returns every plant with its id, name, room, species, current soil moisture and temperature, ideal ranges, status, drying rate per day, next predicted watering date, normal watering volume in ml, probe battery and owner notes. Call this first.",
+    run(){ return S.plants.map(p=>{ const s=SP[p.sp], next=waterSchedule(p,S.now+30*86400e3)[0];
+      return {id:p.id, name:p.name, room:p.room, species:s.name, moisture_pct:p.m, soil_temp_c:p.t, ideal_moisture:s.m, ideal_soil_temp:s.t,
+        status:status(p).k, drying_pct_per_day:+dryRate(p).toFixed(1), next_watering:next?isoDay(next):null, watering_ml:waterAmount({...p,m:s.m[0]}), battery_pct:p.batt, notes:p.notes||""} }) },
+    step:(inp,res)=>t("st_check",{n:res.length}) },
+  { name:"forecast_until",
+    description:"Forecasts, for every plant, the dates it will need water between today and the given date (inclusive), assuming it is watered each time. Input: until (YYYY-MM-DD). Use it for trips or schedules.",
+    inputSchema:{type:"object", properties:{until:{type:"string", description:"Last day to forecast, YYYY-MM-DD"}}, required:["until"]},
+    run(inp){ const u=dayTs(inp.until); if(!u) throw new Error("until must be a date like 2026-11-20"); if(u<S.now) throw new Error("until is in the past");
+      return S.plants.map(p=>({id:p.id, name:p.name, water_on:waterSchedule(p,u).map(isoDay), ml:waterAmount({...p,m:SP[p.sp].m[0]})})) },
+    step:(inp)=>t("st_forecast",{d:fmtD(dayTs(inp.until)||S.now)}) },
+  { name:"check_rooms",
+    description:"Returns each room of the home map with its plants and a verdict: 'room' when several plants there share a problem (e.g. a cold window), 'plant' when only one plant is off, 'single' when there's only one probe. Use it before suggesting where to move plants.",
+    run(){ return roomAnalysis().filter(a=>a.plants.length).map(a=>({room:a.name, verdict:a.verdict.kind, issue:a.verdict.issue||null, plants:a.plants.map(x=>({id:x.p.id, name:x.p.name, issue:x.k, by_window:nearWindow(a.room,x.p.pos)}))})) },
+    step:(inp,res)=>t("st_rooms",{n:res.length}) },
+  { name:"propose_actions",
+    description:"Proposes actions for the owner to approve. Nothing happens until they approve each one. Call it once with every action. Types: reminder {plant_id?, date YYYY-MM-DD, text}; note {plant_id, text}; sitter_sheet {plant_ids[], from, to, sitter?}; vacation_watch {from, to}. Returns how many were queued.",
+    inputSchema:{type:"object", properties:{actions:{type:"array", items:{type:"object", properties:{
+      type:{type:"string", enum:["reminder","note","sitter_sheet","vacation_watch"]}, plant_id:{type:"integer"}, plant_ids:{type:"array", items:{type:"integer"}},
+      date:{type:"string"}, from:{type:"string"}, to:{type:"string"}, text:{type:"string"}, sitter:{type:"string"}}, required:["type"]}}}, required:["actions"]},
+    run(inp){ const list=Array.isArray(inp.actions)?inp.actions:[]; let n=0, bad=[];
+      list.forEach(a=>{ const v=validAction(a); if(v.ok){ agRun.actions.push({...v.a, id:"a"+(AG().nextId++), state:"pending"}); n++ } else bad.push(v.why) });
+      if(!n && bad.length) throw new Error(bad.join("; "));
+      return {queued:n, rejected:bad, note:"Waiting for the owner's approval. Do not say these are done."} },
+    step:(inp,res)=>t("st_propose",{n:res.queued}) },
+];
+function validAction(a){
+  const type=String(a.type||"");
+  if(type==="reminder"){ const ts=dayTs(a.date); if(!ts) return {why:"reminder needs date"}; if(a.plant_id!=null&&!plantById(a.plant_id)) return {why:"unknown plant "+a.plant_id};
+    return {ok:true, a:{type, plant_id:a.plant_id!=null?Number(a.plant_id):null, date:isoDay(ts), text:String(a.text||"").slice(0,160)}} }
+  if(type==="note"){ if(!plantById(a.plant_id)) return {why:"note needs a valid plant_id"}; return {ok:true, a:{type, plant_id:Number(a.plant_id), text:String(a.text||"").slice(0,240)}} }
+  if(type==="sitter_sheet"){ const ids=(a.plant_ids||[]).map(Number).filter(plantById); if(!ids.length) return {why:"sitter_sheet needs plant_ids"};
+    return {ok:true, a:{type, plant_ids:ids, from:isoDay(dayTs(a.from)||S.now), to:isoDay(dayTs(a.to)||S.now+7*86400e3), sitter:String(a.sitter||"").slice(0,60)}} }
+  if(type==="vacation_watch"){ const f=dayTs(a.from), to=dayTs(a.to); if(!f||!to||to<f) return {why:"vacation_watch needs from <= to"}; return {ok:true, a:{type, from:isoDay(f), to:isoDay(to)}} }
+  return {why:"unknown action type "+type};
+}
+function callTool(name, inp){
+  const tool=TOOLS.find(x=>x.name===name), step={tool:name, input:inp||{}};
+  agRun.steps.push(step); render();
+  try{ const res=tool.run(inp||{}); step.label=tool.step(inp||{},res); render(); return res }
+  catch(e){ step.label=t("st_error",{e:e.message}); render(); throw e }
+}
+
+/* ---------------- planners ---------------- */
+function agentPrompt(){
+  return `You are FloraSense Agent, working for the owner of these indoor plants. Today is ${isoDay(S.now)} (${new Date(S.now).toLocaleDateString("en-GB",{weekday:"long"})}).
+You reach the owner's goal in steps: read data with tools, then PROPOSE actions. Nothing happens until the owner approves each action.
+1. Call check_plants. If the goal involves dates (a trip, a week, a schedule), also call forecast_until with the last relevant day. If it involves temperature, light, where plants stand or a recurring problem, also call check_rooms.
+2. Call propose_actions ONCE with every action. Use concrete dates (YYYY-MM-DD) and the plant ids from check_plants.
+   - reminder: dated to-do for the owner or the plant-sitter (include ml for waterings).
+   - note: care advice stored on a plant.
+   - sitter_sheet: only the plants someone must water while the owner is away.
+   - vacation_watch: the trip dates, when the owner is away.
+   Group reminders by day (one reminder per day listing every plant and its ml); propose at most 10 actions.
+3. Reply with a short plan: what you found, what you proposed, and what you will check afterwards.
+Rules: FloraSense Gen 1 can't water by itself, so a person waters. Never say an action is done; it waits for approval. Never give pesticide doses, pet-toxicity or human-health advice. Use only the data from the tools.
+Reply in ${S.lang==="pt"?"European Portuguese":"English"}, plain text without markdown, at most 110 words.`;
+}
+const schemaOf = tl => tl.inputSchema || {type:"object", properties:{}};
+
+async function planWithViewer(goal){
+  const lim=await viewerSample.limits().catch(()=>null);
+  if(!lim||!lim.tools) throw {code:"tools_unavailable"};
+  agCtl=new AbortController();
+  const {text}=await viewerSample(`${agentPrompt()}\n\nOwner's goal: ${goal}`, {
+    signal:agCtl.signal,
+    tools:TOOLS.map(tl=>({name:tl.name, description:tl.description, inputSchema:schemaOf(tl), execute:(inp)=>callTool(tl.name,inp)})),
+    onText:({text})=>{ agRun.text=text; render() },
+  });
+  return text.trim();
+}
+
+async function planWithKey(goal){
+  const client=await getClient();
+  const tools=TOOLS.map(tl=>({name:tl.name, description:tl.description, input_schema:schemaOf(tl)}));
+  const messages=[{role:"user", content:`Owner's goal: ${goal}`}];
+  for(let round=0; round<6; round++){
+    const res=await client.beta.messages.create({
+      model:MODEL, max_tokens:16000, output_config:{effort:"medium"},
+      betas:["server-side-fallback-2026-07-01"], fallbacks:"default",
+      system:agentPrompt(), tools, messages,
+    });
+    if(res.stop_reason==="refusal") return t("ai_refused");
+    messages.push({role:"assistant", content:res.content});
+    const uses=res.content.filter(b=>b.type==="tool_use");
+    const txt=res.content.filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+    if(txt){ agRun.text=txt; render() }
+    if(res.stop_reason!=="tool_use" || !uses.length) return txt;
+    messages.push({role:"user", content:uses.map(u=>{ try{ return {type:"tool_result", tool_use_id:u.id, content:JSON.stringify(callTool(u.name,u.input))} }
+      catch(e){ return {type:"tool_result", tool_use_id:u.id, content:"Error: "+e.message, is_error:true} } })});
+  }
+  return agRun.text;
+}
+
+// Local rules: same tools, same approval flow, no AI
+const MONTHS={jan:0,janeiro:0,feb:1,fev:1,fevereiro:1,february:1,mar:2,march:2,marco:2,apr:3,abr:3,april:3,abril:3,may:4,mai:4,maio:4,jun:5,june:5,junho:5,jul:6,july:6,julho:6,aug:7,ago:7,august:7,agosto:7,sep:8,sept:8,set:8,september:8,setembro:8,oct:9,out:9,october:9,outubro:9,nov:10,november:10,novembro:10,dec:11,dez:11,december:11,dezembro:11};
+function parseTrip(goal){
+  const g=goal.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  const m=/(\d{1,2})\s*(?:-|–|to|a|ate|until)\s*(\d{1,2})\s*(?:de\s+)?([a-z]+)?/.exec(g);
+  const now=new Date(S.now);
+  if(m){ let mon=m[3]&&MONTHS[m[3]]!==undefined?MONTHS[m[3]]:(MONTHS[m[3]?.slice(0,3)]??now.getMonth()); let yr=now.getFullYear(); if(mon<now.getMonth()) yr++;
+    const a=new Date(yr,mon,+m[1],9).getTime(), b=new Date(yr,mon,+m[2],9).getTime(); if(b>=a&&a>S.now) return [a,b] }
+  const start=S.now+(/next week|proxima semana/.test(g)?7:1)*86400e3; return [start, start+7*86400e3];
+}
+async function planLocally(goal){
+  const pause=()=>new Promise(r=>setTimeout(r,350));
+  const g=goal.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  const plants=callTool("check_plants",{}); await pause();
+  const props=[];
+  let text;
+  if(/vacation|holiday|away|trip|travel|ferias|fora|viagem|viajar/.test(g)){
+    const [a,b]=parseTrip(goal);
+    const fc=callTool("forecast_until",{until:isoDay(b)}); await pause();
+    const during=fc.filter(f=>f.water_on.some(d=>dayTs(d)>=a&&dayTs(d)<=b));
+    const before=isoDay(a-86400e3);
+    props.push({type:"reminder", date:before, text:t("r_pretrip",{p:S.plants.map(p=>`${p.name} ~${waterAmount({...p,m:SP[p.sp].m[0]})} ml`).join(", "),ml:""}).replace(/ \(~ ml\)/,"")});
+    // one sitter visit per day, listing what to water that day
+    const byDay={};
+    during.forEach(f=>f.water_on.filter(d=>dayTs(d)>=a&&dayTs(d)<=b).forEach(d=>(byDay[d] ||= []).push(`${f.name} ~${f.ml} ml`)));
+    Object.keys(byDay).sort().forEach(d=>props.push({type:"reminder", date:d, text:t("r_visit",{list:byDay[d].join(", ")})}));
+    if(during.length) props.push({type:"sitter_sheet", plant_ids:during.map(f=>f.id), from:isoDay(a), to:isoDay(b)});
+    props.push({type:"vacation_watch", from:isoDay(a), to:isoDay(b)});
+    text = during.length ? t("lp_vac",{a:fmtD(a),b:fmtD(b),n:Math.round((b-a)/86400e3)+1,k:during.length,total:plants.length}) : t("lp_vac_none",{a:fmtD(a),b:fmtD(b)});
+  } else if(/cold|frost|winter|frio|fria|inverno|geada/.test(g)){
+    const rooms=callTool("check_rooms",{}); await pause();
+    const coldRooms=rooms.filter(r=>r.verdict==="room"&&r.issue==="cold").map(r=>r.room);
+    const cold=S.plants.filter(p=>p.t<SP[p.sp].t[0]+2);
+    cold.forEach(p=>{ props.push({type:"reminder", plant_id:p.id, date:isoDay(S.now), text:t("r_cold",{p:p.name})}); props.push({type:"note", plant_id:p.id, text:t("n_cold",{t:SP[p.sp].t[0]})}) });
+    props.push({type:"reminder", date:isoDay(S.now+(cold.length?2:3)*86400e3), text:t("r_check")});
+    text = cold.length ? t("lp_cold",{k:cold.length}) + (coldRooms.length?" "+t("lp_coldroom",{r:coldRooms.join(", ")}):"") : t("lp_cold_none");
+  } else {
+    const named=S.plants.find(p=>g.includes(p.name.toLowerCase()) || g.includes(SP[p.sp].common.toLowerCase()) || g.includes(SP[p.sp].name.split(" ")[0].toLowerCase()));
+    if(named){
+      const s=SP[named.sp], next=waterSchedule(named,S.now+30*86400e3)[0]||S.now, ml=waterAmount(named.m<s.m[0]?named:{...named,m:s.m[0]});
+      props.push({type:"reminder", plant_id:named.id, date:isoDay(next), text:t("r_water",{p:named.name,ml})});
+      props.push({type:"note", plant_id:named.id, text:t("n_water",{ml})});
+      text=t("lp_plant",{p:named.name,m:named.m,a:s.m[0],b:s.m[1],ml,when:isoDay(next)===isoDay(S.now)?(S.lang==="pt"?"para hoje":"for today"):(S.lang==="pt"?"para ":"for ")+fmtD(next)});
+    } else if(/week|semana|schedule|plan|regas|watering/.test(g)){
+      const fc=callTool("forecast_until",{until:isoDay(S.now+7*86400e3)}); await pause();
+      const byDay={};
+    fc.forEach(f=>f.water_on.forEach(d=>(byDay[d] ||= []).push(`${f.name} ~${f.ml} ml`)));
+    Object.keys(byDay).sort().forEach(d=>props.push({type:"reminder", date:d, text:t("r_waterday",{list:byDay[d].join(", ")})}));
+      text=t("lp_week",{k:props.length});
+    } else {
+      const att=S.plants.filter(needsAttention);
+      att.forEach(p=>props.push({type:"reminder", plant_id:p.id, date:isoDay(S.now), text:status(p).k==="dry"?t("r_water",{p:p.name,ml:waterAmount(p)}):status(p).k==="cold"?t("r_cold",{p:p.name}):p.name+": "+stLabel(p)}));
+      text=t("lp_fallback",{k:att.length});
+    }
+  }
+  callTool("propose_actions",{actions:props}); await pause();
+  return text;
+}
+
+async function runAgent(goal){
+  goal=String(goal||"").trim(); if(!goal || agRun?.status==="running") return;
+  const useClaude=aiOn();
+  agRun={id:"r"+(AG().nextId++), goal, at:S.now, status:"running", by:useClaude?"claude":"local", steps:[], text:"", actions:[]};
+  AG().runs.unshift(agRun); AG().runs=AG().runs.slice(0,6); render();
+  try{
+    const text = !useClaude ? await planLocally(goal) : viewerSample ? await planWithViewer(goal) : await planWithKey(goal);
+    agRun.text=text||agRun.text; agRun.status="done";
+  }catch(e){
+    if(e&&e.code==="cancelled"){ agRun.status="stopped" }
+    else { agRun.status="error"; agRun.error=t("ag_err",{e:errText(e)}) }
+  }
+  agCtl=null; save(); render(); announce(agRun.status==="done"?t("ag_pending_n",{n:agRun.actions.filter(a=>a.state==="pending").length}):(agRun.error||""));
+}
+
+/* ---------------- applying approved actions ---------------- */
+function applyAction(a){
+  const st=AG();
+  if(a.type==="reminder") st.reminders.push({id:a.id, plant_id:a.plant_id, at:dayTs(a.date), text:a.text, done:false});
+  else if(a.type==="note"){ const p=plantById(a.plant_id); if(p) p.notes=(p.notes?p.notes+"\n":"")+a.text }
+  else if(a.type==="sitter_sheet") st.sheets.unshift({id:a.id, plant_ids:a.plant_ids, from:a.from, to:a.to, sitter:a.sitter});
+  else if(a.type==="vacation_watch") st.vacation={from:a.from, to:a.to};
+}
+function decide(runId, actId, approve){
+  const run=AG().runs.find(r=>r.id===runId); if(!run) return;
+  run.actions.filter(a=>a.state==="pending" && (actId==="*"||a.id===actId)).forEach(a=>{ a.state=approve?"approved":"declined"; if(approve) applyAction(a) });
+  save(); render();
+}
+function actionLabel(a){
+  const p=a.plant_id!=null?plantById(a.plant_id):null;
+  if(a.type==="reminder") return {kind:t("act_reminder"), main:a.text||(p?p.name:""), sub:fmtD(dayTs(a.date))+(p?" · "+p.name:"")};
+  if(a.type==="note") return {kind:t("act_note"), main:a.text, sub:p?p.name:""};
+  if(a.type==="sitter_sheet") return {kind:t("act_sitter"), main:a.plant_ids.map(id=>plantById(id)?.name).filter(Boolean).join(", "), sub:`${fmtD(dayTs(a.from))} – ${fmtD(dayTs(a.to))}`};
+  return {kind:t("act_vacation"), main:`${fmtD(dayTs(a.from))} – ${fmtD(dayTs(a.to))}`, sub:""};
+}
+
+/* ---------------- views ---------------- */
+function dueReminders(){ return AG().reminders.filter(r=>!r.done && r.at<=S.now+86400e3/2) }
+function agentAlertsHTML(row){
+  const due=dueReminders(); if(!due.length) return "";
+  return `<h2 style="font-size:17px;margin:6px 0 8px">${t("rem_due")}</h2>`+due.map(r=>`<div class="card ag-rem"><div><b>${esc(r.text)}</b><div class="plant-room">${fmtD(r.at)}</div></div><button class="btn-sm" data-ag-done="${r.id}">✓ ${t("ag_done")}</button></div>`).join("");
+}
+function pAgent(){
+  const st=AG(), run=st.runs[0], running=run?.status==="running";
+  const steps=run?run.steps.map((s,i)=>`<li><span class="ag-dot" aria-hidden="true">${i+1}</span><div><b>${esc(s.label||s.tool)}</b><code>${esc(s.tool)}(${esc(Object.keys(s.input||{}).length?JSON.stringify(s.input).slice(0,90):"")})</code></div></li>`).join(""):"";
+  const pend=run?run.actions.filter(a=>a.state==="pending").length:0;
+  const acts=run?run.actions.map(a=>{ const L=actionLabel(a);
+    return `<li class="ag-act ${a.state}"><div><span class="ag-kind">${L.kind}</span><b>${esc(L.main)}</b>${L.sub?`<div class="plant-room">${esc(L.sub)}</div>`:""}</div>
+     ${a.state==="pending"?`<div class="ag-btns"><button class="btn-sm ag-ok" data-ag-ok="${run.id}:${a.id}">${t("ag_approve")}</button><button class="btn-sm" data-ag-no="${run.id}:${a.id}">${t("ag_decline")}</button></div>`
+       :`<span class="pill ${a.state==="approved"?"s-ok":"s-dry"}">${a.state==="approved"?t("ag_approved"):t("ag_declined")}</span>`}</li>` }).join(""):"";
+  const rems=st.reminders.filter(r=>!r.done).sort((a,b)=>a.at-b.at).slice(0,8);
+  const vac=st.vacation;
+  let h=`<div class="head"><div><div class="eyebrow">${t("ag_level")}</div><h1>${t("ag_title")}</h1></div><span class="ai-chip">${aiOn()?t("ag_by_claude"):t("ag_by_local")}</span></div>
+  <div class="ag-grid"><div class="ag-main">
+   <form class="card ag-goal" id="ag-form"><label for="ag-goal"><b>${t("ag_goal")}</b></label>
+    <div class="ag-row"><input class="field" id="ag-goal" value="${esc(agGoal)}" placeholder="${t("ag_goal_ph")}" autocomplete="off" ${running?"disabled":""}>
+    ${running&&agCtl?`<button type="button" class="btn ghost" data-ag-stop>${t("ag_stop")}</button>`:`<button class="btn" ${running?"disabled":""}>${running?t("ag_running"):t("ag_run")}</button>`}</div>
+    <div class="chips">${["ag_ex1","ag_ex2","ag_ex3","ag_ex4"].map(k=>`<button type="button" data-ag-ex="${esc(t(k))}" ${running?"disabled":""}>${t(k)}</button>`).join("")}</div>
+    ${aiOn()?"":`<p class="plant-room" style="margin:4px 0 0">${t("ag_local_hint")}</p>`}</form>`;
+  if(run){
+    h+=`<div class="card"><div class="plant-room">“${esc(run.goal)}” · ${run.by==="claude"?t("ag_by_claude"):t("ag_by_local")}</div>
+     <h2 class="ag-h">${t("ag_steps")}</h2><ol class="ag-steps">${steps||`<li><span class="ag-dot">…</span><div>${t("ag_running")}</div></li>`}${running?`<li class="ag-live"><span class="ag-dot">…</span><div>${t("ag_running")}</div></li>`:""}</ol>
+     ${run.text?`<h2 class="ag-h">${t("ag_plan")}</h2><p class="ag-plan">${esc(run.text)}</p>`:""}
+     ${run.error?`<p class="warnbox">${esc(run.error)}</p>`:""}</div>`;
+    if(!running) h+=`<div class="card"><div class="ag-acthead"><h2 class="ag-h" style="margin:0">${t("ag_actions")}</h2>${pend>1?`<button class="btn-sm ag-ok" data-ag-ok="${run.id}:*">${t("ag_approve_all")}</button>`:""}</div>
+      ${run.actions.length?`<ul class="ag-acts">${acts}</ul><p class="plant-room" style="margin:8px 0 0">${pend?t("ag_pending_n",{n:pend}):t("ag_summary",{a:run.actions.filter(a=>a.state==="approved").length,d:run.actions.filter(a=>a.state==="declined").length})+". "+t("ag_after")}</p>`:`<p class="plant-room">${t("ag_none")}</p>`}</div>`;
+  }
+  h+=`</div><aside class="ag-side">`;
+  if(vac) h+=`<div class="card ag-vac"><b>🧳 ${t("ag_vac_on",{a:fmtD(dayTs(vac.from)),b:fmtD(dayTs(vac.to))})}</b><p class="plant-room">${t("ag_vac_d")}</p>${vacStatus()}<button class="btn-sm" data-ag-endvac>${t("ag_end_vac")}</button></div>`;
+  h+=`<div class="card"><b>${t("ag_reminders")}</b>${rems.length?`<ul class="ag-rems">${rems.map(r=>`<li><div><span>${esc(r.text)}</span><span class="plant-room">${fmtD(r.at)}</span></div><button class="btn-sm" data-ag-done="${r.id}" aria-label="${t("ag_done")}">✓</button></li>`).join("")}</ul>`:`<p class="plant-room" style="margin:6px 0 0">${t("ag_no_rem")}</p>`}</div>`;
+  if(st.sheets.length) h+=`<div class="card"><b>${t("ag_sheets")}</b>${st.sheets.slice(0,3).map(sh=>`<div class="ag-sheet"><div class="plant-room">${fmtD(dayTs(sh.from))} – ${fmtD(dayTs(sh.to))}</div><div class="share-preview">${esc(sheetText(sh.plant_ids, sh.sitter))}</div><button class="btn-sm" data-ag-copy="${sh.id}">${agCopied===sh.id?t("ag_copied"):t("ag_copy")}</button></div>`).join("")}</div>`;
+  if(st.runs.length>1) h+=`<div class="card"><b>${t("ag_history")}</b><ul class="ag-hist">${st.runs.slice(1).map(r=>`<li>“${esc(r.goal)}” · ${r.actions.filter(a=>a.state==="approved").length}/${r.actions.length} ${t("ag_approved").toLowerCase()}</li>`).join("")}</ul></div>`;
+  return h+`</aside></div>`;
+}
+// While away: which plants the sitter has to water today, from the live readings
+function vacStatus(){
+  const v=AG().vacation, a=dayTs(v.from), b=dayTs(v.to);
+  if(S.now<a||S.now>b+86400e3) return "";
+  const need=S.plants.filter(p=>p.m<SP[p.sp].m[0]+3);
+  return `<p class="ag-watch">${need.length?(S.lang==="pt"?"Hoje quem cuida deve regar: ":"Today the sitter should water: ")+need.map(p=>esc(p.name)).join(", "):(S.lang==="pt"?"Hoje está tudo no intervalo.":"Everything is in range today.")}</p>`;
+}
+
+/* ---------------- events (own data-ag-* attributes) ---------------- */
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return; const d=b.dataset;
+  if(d.agEx){ agGoal=d.agEx; runAgent(agGoal) }
+  else if(d.agStop!==undefined){ agCtl?.abort() }
+  else if(d.agOk){ const [r,a]=d.agOk.split(":"); decide(r,a,true) }
+  else if(d.agNo){ const [r,a]=d.agNo.split(":"); decide(r,a,false) }
+  else if(d.agDone){ const r=AG().reminders.find(x=>x.id===d.agDone); if(r){ r.done=true; save(); render() } }
+  else if(d.agEndvac!==undefined){ AG().vacation=null; save(); render() }
+  else if(d.agCopy){ const sh=AG().sheets.find(x=>x.id===d.agCopy); if(!sh) return; const txt=sheetText(sh.plant_ids, sh.sitter);
+    const ok=()=>{ agCopied=sh.id; render(); setTimeout(()=>{ agCopied=null; render() },1500) };
+    navigator.clipboard ? navigator.clipboard.writeText(txt).then(ok,()=>{}) : null }
+});
+document.addEventListener("submit",e=>{ if(e.target.id==="ag-form"){ e.preventDefault(); agGoal=$("#ag-goal").value; runAgent(agGoal) } });
+document.addEventListener("input",e=>{ if(e.target.id==="ag-goal") agGoal=e.target.value });
+
+</script>
+<script>
+
+/* =========================================================
+   State (this browser only)
+   ========================================================= */
+const KEY="florasense-web-v3";
+const HIST_MAX=30*4+40;
+let S = load() || fresh();
+function fresh(){ return {now:START.getTime(), plants:[...seedPlants().map(p=>({...p, hist:backfill(p,30), notes:""})), ...homeDemoPlants()], premium:true, nextId:8, chats:{}, lang:"en", theme:"auto", ai:{enabled:false, remember:false}} }
+function load(){
+  try{ const r=localStorage.getItem(KEY); if(!r) return null; const s=JSON.parse(r);
+    s.lang ||= "en"; s.theme ||= "auto"; s.ai ||= {enabled:false, remember:false}; s.plants.forEach(p=>p.notes ??= ""); return s;
+  }catch(e){ return null }
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }
+
+// UI state (not saved)
+let page="plants", sel=S.plants[0]?.id, pair=null, modal=null, filter="all", query="", roomF="", sort="urgent", busy=false;
+
+/* =========================================================
+   Simulation
+   ========================================================= */
+function tick(hours=6){
+  S.now += hours*3600e3; const hr=new Date(S.now).getHours();
+  S.plants.forEach(p=>{ const s=SP[p.sp];
+    p.m=Math.max(2,+(p.m - s.dry/4*(p.t<s.t[0]?0.6:1)*(0.75+Math.random()*0.5)).toFixed(1));
+    p.t=+((p.room.includes("window")||p.room.includes("janela")?15:21) + Math.sin((hr-9)/24*2*Math.PI)*1.6 + (Math.random()-.5)*.6).toFixed(1);
+    if(Math.random()<.25) p.batt=Math.max(0,p.batt-1);
+    p.hist.push({ts:S.now,m:p.m,t:p.t}); if(p.hist.length>HIST_MAX) p.hist.shift();
+  });
+  save(); render();
+}
+function water(p){
+  const s=SP[p.sp], from=p.m, ml=waterAmount(p);
+  p.m=+Math.min(s.m[1]-1,(s.m[0]+s.m[1])/2+(s.m[1]-s.m[0])*(0.2+Math.random()*0.15)).toFixed(1);
+  p.hist.push({ts:S.now,m:p.m,t:p.t,w:{ml,from}}); if(p.hist.length>HIST_MAX) p.hist.shift();
+  save(); render(); announce(`${p.name}: ${from}% → ${p.m}%`);
+}
+
+/* =========================================================
+   Pieces
+   ========================================================= */
+function plantCard(p){
+  const s=SP[p.sp], st=status(p);
+  return `<button class="plant ${p.id===sel?"sel":""}" data-open="${p.id}" aria-pressed="${p.id===sel}" aria-label="${esc(p.name)}, ${esc(p.room)}: ${stLabel(p)}, ${t("moisture")} ${Math.round(p.m)}%, ${t("soil_temp")} ${p.t.toFixed(1)} °C"><div class="plant-top"><div><div class="plant-name">${esc(p.name)}</div><div class="plant-room">${esc(p.room)}</div></div><span class="pill ${st.cls}">${stLabel(p)}</span></div>
+  <div class="metrics"><div class="metric"><small>${t("moisture")}</small><strong>${Math.round(p.m)}%</strong>${rangeBar(p.m,s.m,0,100,(st.k==="dry"||st.k==="wet")?st.k:"ok")}</div>
+  <div class="metric"><small>${t("soil_temp")}</small><strong>${p.t.toFixed(1)} °C</strong>${rangeBar(p.t,s.t,5,35,(st.k==="cold"||st.k==="warm")?st.k:"ok")}</div></div></button>`;
+}
+function detail(p){
+  if(!p) return `<div class="card empty">${t("select_plant")}</div>`;
+  const s=SP[p.sp], st=status(p);
+  const mTxt=p.m<s.m[0]?t("st_dry"):p.m>s.m[1]?t("st_wet"):t("inrange"), tTxt=p.t<s.t[0]?t("st_cold"):p.t>s.t[1]?t("st_warm"):t("inrange");
+  return `<div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between;align-items:start;gap:8px"><div><h2 style="font-size:24px">${esc(p.name)}</h2><div class="eyebrow"><i>${s.name}</i> · ${esc(p.room)}</div></div><span class="pill ${st.cls}">${stLabel(p)}</span></div>
+   <div class="metrics" style="margin:14px 0"><div class="kpi" style="background:var(--bg)"><small>${t("soil_moisture")}</small><strong>${Math.round(p.m)}%</strong><small>${mTxt} · ${t("ideal")} ${s.m[0]}–${s.m[1]}%</small></div>
+   <div class="kpi" style="background:var(--bg)"><small>${t("soil_temperature")}</small><strong>${p.t.toFixed(1)} °C</strong><small>${tTxt} · ${t("ideal")} ${s.t[0]}–${s.t[1]} °C</small></div></div>
+   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:14px">${t("last_days",{n:range})}</b>
+   <div class="seg2" role="group">${[7,30].map(d=>`<button data-range="${d}" class="${range===d?"on":""}" aria-pressed="${range===d}">${t("days",{n:d})}</button>`).join("")}</div></div>
+   ${chart(p)}</div>
+   ${S.premium?`<div class="coachbox"><small>${t("coach_based")}</small><p>${esc(coachAnswer(p,S.lang==="pt"?"como está":"how is it doing",S.lang))}</p><button data-ask="${p.id}">${t("followup")}</button></div>`
+     :`<div class="card"><b>${t("coach_premium")}</b><div class="plant-room">${t("turn_on_premium")}</div></div>`}
+   ${p.notes?`<div class="card"><b style="font-size:14px">${t("notes")}</b><p class="notes">${esc(p.notes)}</p></div>`:""}
+   ${wateringLog(p)}
+   <div class="card" style="font-size:13px;color:var(--muted)">${t("probe",{id:p.probe,b:p.batt})}${p.batt<15?` · <b style="color:var(--dry)">${t("replace")}</b>`:""}<br>${t("next_water")}: ${p.m<s.m[0]?`<b>${t("today")}</b>`:t("in_days",{n:Math.max(1,Math.round(daysToDry(p)))})}</div>
+   <div class="detail-actions"><button class="btn" data-water="${p.id}">${t("i_watered")}</button><button class="btn ghost" data-edit="${p.id}">✎ ${t("edit")}</button><button class="btn ghost" data-share="${p.id}">↗ ${t("share")}</button><button class="btn ghost" data-remove="${p.id}">${armed==="rm"+p.id?t("tap_confirm"):t("unpair")}</button></div>`;
+}
+
+/* =========================================================
+   Pages
+   ========================================================= */
+const URG={dry:0,wet:1,cold:2,warm:3,ok:4};
+function pPlants(){
+  const ps=S.plants, att=ps.filter(needsAttention), w=att.find(p=>status(p).k==="dry")||att[0];
+  const inRange=ps.length?Math.round((ps.length-att.length)/ps.length*100):0;
+  let h=`<div class="head"><div><div class="eyebrow">${fmtDay(S.now)}</div><h1>${t("my_plants")}</h1></div><button class="btn" data-pair>${t("pair")}</button></div>
+  <div class="stats">
+   <button class="kpi stat ${filter==="all"?"on":""}" data-filter="all" aria-pressed="${filter==="all"}"><small>${t("plants")}</small><strong>${ps.length}</strong><span>${t("show_all")}</span></button>
+   <button class="kpi stat ${filter==="attention"?"on":""}" data-filter="attention" aria-pressed="${filter==="attention"}"><small>${t("need_att")}</small><strong>${att.length}</strong><span>${t("show_these")}</span></button>
+   <button class="kpi stat ${filter==="ok"?"on":""}" data-filter="ok" aria-pressed="${filter==="ok"}"><small>${t("in_range")}</small><strong>${inRange}%</strong><span>${t("show_healthy")}</span></button>
+   <button class="kpi stat" data-goto="settings"><small>${t("plan")}</small><strong>${S.premium?t("premium"):t("free")}</strong><span>${t("manage_plan")}</span></button></div>`;
+  if(w){ const s=SP[w.sp], k=status(w).k; h+=`<button class="banner" data-open="${w.id}"><b>${t("ban_"+k,{p:esc(w.name)})}</b><span>${k==="dry"||k==="wet"?`${t("moisture")} ${w.m}%, ${t("ideal")} ${s.m[0]}–${s.m[1]}%`:`${t("soil_temp")} ${w.t} °C, ${t("ideal")} ${s.t[0]}–${s.t[1]} °C`}</span></button>` }
+  if(!ps.length) return h+`<div class="card empty">${t("no_probes")}</div>`;
+  const rooms=[...new Set(ps.map(p=>p.room))].sort();
+  h+=`<div class="toolbar" role="search"><label class="sr" for="q">${t("search")}</label><input class="field" id="q" type="search" value="${esc(query)}" placeholder="${t("search")}">
+   <label class="sr" for="roomF">${t("room")}</label><select class="field" id="roomF"><option value="">${t("all_rooms")}</option>${rooms.map(r=>`<option ${r===roomF?"selected":""}>${esc(r)}</option>`).join("")}</select>
+   <label class="sr" for="sortSel">Sort</label><select class="field" id="sortSel">${["urgent","name","dry","room"].map(k=>`<option value="${k}" ${k===sort?"selected":""}>${t("sort_"+k)}</option>`).join("")}</select></div>`;
+  const ql=query.trim().toLowerCase();
+  let shown = filter==="attention" ? att : filter==="ok" ? ps.filter(p=>!needsAttention(p)) : ps.slice();
+  if(roomF) shown=shown.filter(p=>p.room===roomF);
+  if(ql) shown=shown.filter(p=>[p.name,p.room,SP[p.sp].name,SP[p.sp].common].some(v=>v.toLowerCase().includes(ql)));
+  const by={urgent:(a,b)=>URG[status(a).k]-URG[status(b).k]||daysToDry(a)-daysToDry(b), name:(a,b)=>a.name.localeCompare(b.name), dry:(a,b)=>a.m-b.m, room:(a,b)=>a.room.localeCompare(b.room)||a.name.localeCompare(b.name)};
+  shown.sort(by[sort]);
+  if(shown.length && !shown.some(p=>p.id===sel)) sel=shown[0].id;
+  const filtered = filter!=="all"||roomF||ql;
+  const note = filtered ? `<div class="row-sum"><span>${t("showing",{n:shown.length,total:ps.length})}</span><button class="btn-sm" data-clear>${t("show_all")}</button></div>` : "";
+  const empty = filter==="attention"&&!roomF&&!ql ? t("none_att") : filter==="ok"&&!roomF&&!ql ? t("none_ok") : t("no_match");
+  const list = shown.length ? `<div class="grid">${shown.map(plantCard).join("")}</div>` : `<div class="card empty">${empty}</div>`;
+  return h+note+`<div class="split"><div>${list}</div><div class="panel-r">${detail(ps.find(p=>p.id===sel))}</div></div>`;
+}
+function pAlerts(){
+  const now=S.plants.filter(needsAttention), soon=S.plants.filter(p=>!needsAttention(p)&&daysToDry(p)<=2), low=S.plants.filter(p=>p.batt<15);
+  let h=`<div class="head"><div><div class="eyebrow">${fmtDay(S.now)}</div><h1>${t("alerts")}</h1></div></div>`;
+  h+=agentAlertsHTML();   // reminders the Plant Agent set up
+  if(!now.length&&!soon.length&&!low.length) return h+(dueReminders().length?"":`<div class="card empty">${t("no_alerts")}</div>`);
+  const row=(p,txt,pill)=>`<button class="plant" data-open="${p.id}"><div class="plant-top"><div><div class="plant-name">${esc(p.name)} <span class="plant-room">· ${esc(p.room)}</span></div><div class="plant-room">${txt}</div></div>${pill||""}</div></button>`;
+  if(now.length) h+=`<h2 style="font-size:17px;margin:6px 0 8px">${t("now_att")}</h2>`+now.map(p=>{const s=SP[p.sp],st=status(p);return row(p,st.k==="dry"||st.k==="wet"?`${t("moisture")} ${p.m}% · ${t("ideal")} ${s.m[0]}–${s.m[1]}%`:`${t("soil_temp")} ${p.t} °C · ${t("ideal")} ${s.t[0]}–${s.t[1]} °C`,`<span class="pill ${st.cls}">${stLabel(p)}</span>`)}).join("");
+  if(soon.length&&S.premium) h+=`<h2 style="font-size:17px;margin:18px 0 8px">${t("predicted")} <span class="premium">Premium</span></h2>`+soon.map(p=>row(p,t("will_need",{n:Math.max(6,Math.round(daysToDry(p)*4)*6)}))).join("");
+  if(low.length) h+=`<h2 style="font-size:17px;margin:18px 0 8px">${t("battery")}</h2>`+low.map(p=>row(p,t("batt_row",{id:p.probe,b:p.batt}))).join("");
+  return h;
+}
+
+/* ---------- Home map ---------- */
+function pHome(){ return `<div class="head"><div><div class="eyebrow">${fmtDay(S.now)}</div><h1>${t("hm_title")}</h1></div></div>`+homeMapView() }
+function hmOpenPlant(id){ sel=id; page="plants"; render(); window.scrollTo(0,0) }
+
+/* ---------- Coach ---------- */
+function pCoach(){
+  let h=`<div class="head"><div><div class="eyebrow">Premium · <span class="ai-chip">${aiOn()?t("real_ai")+" · "+aiName():t("local_ai")}</span></div><h1>${t("coach")}</h1></div>${S.premium?qualityBadge():""}</div>`;
+  if(!S.premium) return h+`<div class="card"><h2 style="font-size:20px">${t("coach_upsell")}</h2><p class="eyebrow">${t("coach_price")}</p><button class="btn" style="width:auto" data-premium>${t("trial")}</button></div>`;
+  if(!S.plants.length) return h+`<div class="card empty">${t("pair_first")}</div>`;
+  const p=S.plants.find(x=>x.id===sel)||S.plants[0]; sel=p.id; const c=S.chats[p.id]||[];
+  const aiMsg=(m,i)=>`<div class="msg ai">${m.img?`<img src="${m.img}" alt="">`:""}${esc(m.text)}${m.sys?"":`<em>${t("ai_label")}${m.via==="ai"?" · "+aiName():""}</em>
+    <div class="rate" role="group" aria-label="${t("helpful")}?"><button data-rate="${p.id}:${i}:up" class="${m.rating==="up"?"on":""}" aria-pressed="${m.rating==="up"}" aria-label="${t("helpful")}">👍</button><button data-rate="${p.id}:${i}:down" class="${m.rating==="down"?"on":""}" aria-pressed="${m.rating==="down"}" aria-label="${t("not_helpful")}">👎</button></div>`}</div>`;
+  return h+`<div class="coachpage"><div class="plist" role="group">${S.plants.map(x=>`<button class="${x.id===p.id?"on":""}" data-coach="${x.id}" aria-pressed="${x.id===p.id}"><span><b>${esc(x.name)}</b><br><span class="plant-room">${esc(x.room)}</span></span><span class="pill ${status(x).cls}">${stLabel(x)}</span></button>`).join("")}</div>
+   <div class="chatwrap"><div class="context">${t("using",{s:SP[p.sp].name,m:p.m,t:p.t})}</div>
+   <div class="chat" id="chat" aria-live="polite">${c.length?"":`<div class="msg ai">${t("hi",{p:esc(p.name)})}<em>${t("ai_label")}</em></div>`}
+   ${c.map((m,i)=>m.me?`<div class="msg me">${m.img?`<img src="${m.img}" alt="">`:""}${esc(m.text)}</div>`:aiMsg(m,i)).join("")}
+   ${busy?`<div class="msg ai typing">${t("thinking")}</div>`:""}</div>
+   <div class="chips">${["q1","q2","q3","q4","q5"].map(k=>`<button data-q="${esc(t(k))}" ${busy?"disabled":""}>${t(k)}</button>`).join("")}<button data-photo ${busy?"disabled":""}>${t("photo")}</button></div>
+   <form class="ask" id="askf" style="background:transparent"><label class="sr" for="askq">${t("ask_ph")}</label><input name="q" id="askq" placeholder="${t("ask_ph")}" autocomplete="off" ${busy?"disabled":""}><button ${busy?"disabled":""}>${t("ask")}</button></form></div></div>`;
+}
+
+/* ---------- Settings ---------- */
+function pSettings(){
+  const q=quality();
+  return `<div class="head"><div><h1>${t("settings")}</h1></div></div>
+  <div class="card setcard"><h2>${t("s_general")}</h2>
+   <div class="setrow"><div><b>Premium</b><div class="plant-room">${t("s_premium_d")}</div></div><button class="switch ${S.premium?"on":""}" data-premium role="switch" aria-checked="${S.premium}" aria-label="Premium"></button></div>
+   <div class="setrow"><div><b>${t("s_lang")}</b></div><div class="seg2" role="group">${[["en","English"],["pt","Português"]].map(([k,l])=>`<button data-lang="${k}" class="${S.lang===k?"on":""}" aria-pressed="${S.lang===k}">${l}</button>`).join("")}</div></div>
+   <div class="setrow"><div><b>${t("s_theme")}</b></div><div class="seg2" role="group">${["auto","light","dark"].map(k=>`<button data-theme="${k}" class="${S.theme===k?"on":""}" aria-pressed="${S.theme===k}">${t("th_"+k)}</button>`).join("")}</div></div>
+   <div class="setrow"><div><b>${t("s_quality")}</b><div class="plant-room">${q.rate===null?t("q_none",{n:q.answers}):t("q_line",{r:q.rate,up:q.up,n:q.rated,a:q.answers})}</div></div>${q.rate===null?"":`<span class="pill ${q.rate>=80?"s-ok":"s-dry"}">${q.rate>=80?t("on_target"):t("below_target")}</span>`}</div>
+   <div class="setrow"><div><b>${t("s_probes")}</b><div class="plant-room">${S.plants.map(p=>p.probe).join(", ")||t("none")}</div></div></div>
+   <div class="setrow"><div><b>${t("s_data")}</b><div class="plant-room">${t("s_data_d")}</div></div><button class="btn-sm" data-csv>${t("export")}</button></div>
+   <div class="setrow"><div><b>${t("s_reset")}</b><div class="plant-room">${t("s_reset_d")}</div></div><button class="btn-sm" data-reset>${armed==="reset"?t("tap_confirm"):t("reset")}</button></div></div>
+  <div class="card setcard"><h2>${t("s_ai")}</h2><p class="plant-room" style="margin:0">${viewerSample?t("s_ai_d_viewer"):t("s_ai_d",{m:MODEL})}</p>
+   <div class="warnbox">⚠ ${viewerSample?t("s_ai_warn_viewer"):t("s_ai_warn")}</div>
+   <div class="setrow"><div><b>${t("s_ai_on")}</b></div><button class="switch ${S.ai.enabled?"on":""}" data-aitoggle role="switch" aria-checked="${S.ai.enabled}" aria-label="${t("s_ai_on")}"></button></div>
+   ${viewerSample?"":`<label class="eyebrow" for="aikey" style="display:block;margin-top:10px">${t("s_key")}</label>
+   <input class="field" id="aikey" type="password" autocomplete="off" value="${esc(apiKey)}" placeholder="${t("s_key_ph")}">
+   <label class="check"><input type="checkbox" id="airemember" ${S.ai.remember?"checked":""}> ${t("s_remember")}</label>
+   <p class="plant-room" style="margin:0 0 10px">${t("s_key_note")}</p>
+   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn-sm" data-aitest>${t("s_test")}</button><span class="plant-room" id="aitest">${aiTest}</span></div>`}</div>`;
+}
+
+/* ---------- Modals ---------- */
+function pairModal(){
+  const steps=`<div class="steps">${[1,2,3].map(i=>`<i class="${i<=pair.step?"on":""}"></i>`).join("")}</div>`;
+  let h=`<div class="modal" data-closebg><div class="card" role="dialog" aria-modal="true" aria-labelledby="mtitle"><div style="display:flex;justify-content:space-between;align-items:center"><b id="mtitle">${t("pair_title",{n:pair.step})}</b><button class="back" style="margin:0" data-close aria-label="${t("close")}">✕</button></div>${steps}`;
+  if(pair.step===1) h+=`<h2 style="font-size:24px;margin-bottom:6px">${t("scan_title")}</h2><p class="eyebrow" style="font-size:14px">${t("scan_d")}</p><button class="btn" data-scan>${t("scan")}</button>`;
+  else if(pair.step===2){ const q=(pair.q||"").toLowerCase(), list=SPECIES.filter(s=>!q||s.name.toLowerCase().includes(q)||s.common.toLowerCase().includes(q)).slice(0,6);
+    h+=`<div class="context" style="margin-bottom:12px">${t("connected",{id:pair.probe})}</div><h2 style="font-size:24px;margin-bottom:6px">${t("which")}</h2>
+    <label class="sr" for="spq">${t("search_sp")}</label><input class="field" id="spq" value="${esc(pair.q||"")}" placeholder="${t("search_sp")}">
+    <div id="splist">${list.map(s=>`<button class="opt ${pair.sp===s.id?"on":""}" data-sp="${s.id}" aria-pressed="${pair.sp===s.id}"><div><b>${s.name}</b><small>${t("moisture")} ${s.m[0]}–${s.m[1]}% · ${t("soil_temp")} ${s.t[0]}–${s.t[1]} °C</small></div><span class="radio"></span></button>`).join("")||`<p class="eyebrow">${t("no_sp")}</p>`}</div>
+    <button class="btn" data-next ${pair.sp?"":"disabled"}>${t("cont")}</button>`; }
+  else { const s=SP[pair.sp];
+    h+=`<h2 style="font-size:24px;margin-bottom:6px">${t("name_title")}</h2><label class="eyebrow" for="pname">${t("name")}</label><input class="field" id="pname" value="${esc(s.common)}">
+    <label class="eyebrow" for="proom">${t("room")}</label><select class="field" id="proom">${t("rooms").map(r=>`<option>${r}</option>`).join("")}</select>
+    <button class="btn" data-done>${t("add")}</button>`; }
+  return h+`</div></div>`;
+}
+function editModal(p){
+  const rooms=[...new Set([...t("rooms"),...S.plants.map(x=>x.room)])];
+  return `<div class="modal" data-closebg><div class="card" role="dialog" aria-modal="true" aria-labelledby="mtitle"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="mtitle" style="font-size:22px">${t("edit_title",{p:esc(p.name)})}</h2><button class="back" style="margin:0" data-close aria-label="${t("close")}">✕</button></div>
+   <label class="eyebrow" for="ename">${t("name")}</label><input class="field" id="ename" value="${esc(p.name)}">
+   <label class="eyebrow" for="eroom">${t("room")}</label><input class="field" id="eroom" list="roomlist" value="${esc(p.room)}"><datalist id="roomlist">${rooms.map(r=>`<option value="${esc(r)}">`).join("")}</datalist>
+   <label class="eyebrow" for="esp">${t("species")}</label><select class="field" id="esp">${SPECIES.map(s=>`<option value="${s.id}" ${s.id===p.sp?"selected":""}>${s.name} (${s.common})</option>`).join("")}</select>
+   <label class="eyebrow" for="enotes">${t("notes")}</label><textarea class="field" id="enotes" placeholder="${t("notes_ph")}">${esc(p.notes||"")}</textarea>
+   <div class="detail-actions"><button class="btn" data-esave="${p.id}">${t("save")}</button><button class="btn ghost" data-close>${t("cancel")}</button></div></div></div>`;
+}
+function shareModal(){
+  const ids=modal.ids;
+  return `<div class="modal" data-closebg><div class="card" role="dialog" aria-modal="true" aria-labelledby="mtitle"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="mtitle" style="font-size:22px">${t("share_title")}</h2><button class="back" style="margin:0" data-close aria-label="${t("close")}">✕</button></div>
+   <p class="plant-room">${t("share_d")}</p>
+   <label class="eyebrow" for="sitter">${t("sitter")}</label><input class="field" id="sitter" value="${esc(modal.sitter||"")}">
+   <fieldset style="border:0;padding:0;margin:0 0 10px"><legend class="eyebrow">${t("which_plants")}</legend>${S.plants.map(p=>`<label class="check"><input type="checkbox" data-shareid="${p.id}" ${ids.includes(p.id)?"checked":""}> ${esc(p.name)} <span class="plant-room">· ${esc(p.room)}</span></label>`).join("")}</fieldset>
+   <div class="share-preview" id="sharepre">${esc(sheetText(ids, modal.sitter))}</div>
+   <div class="detail-actions" style="margin-top:12px"><button class="btn" data-copy>${modal.copied?t("copied"):t("copy")}</button><button class="btn ghost" data-dl>⬇ ${t("download")}</button></div></div></div>`;
+}
+/* =========================================================
+   Render (keeps keyboard focus across re-renders)
+   ========================================================= */
+const FOCUS_ATTRS=["id","data-open","data-filter","data-range","data-rate","data-coach","data-goto","data-sp","data-lang","data-theme","data-shareid","data-q","data-water","data-edit","data-share","data-page","data-esave","data-pair","data-ask","data-photo","data-premium","data-aitoggle","data-reset","data-csv","data-remove"];
+function focusKey(el){ if(!el||el===document.body) return null; for(const a of FOCUS_ATTRS){ const v=el.getAttribute&&el.getAttribute(a); if(v!==null&&v!==undefined) return {a,v,pos:el.selectionStart} } return null }
+function render(){
+  applyTheme();
+  const fk=focusKey(document.activeElement), hadModal=modalShown;
+  $("#skip").textContent=t("skip");
+  $("#mainnav").innerHTML=[["plants","M12 22V10|M12 12c0-5 3-8 8-8 0 5-3 8-8 8z|M12 15c0-4-2.5-6.5-7-6.5 0 4 2.5 6.5 7 6.5z"],["alerts","M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9|M10 21h4"],["home","M3 10.5L12 3l9 7.5|M5 9v11h14V9|M10 20v-6h4v6"],["coach","M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"],["agent","M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z|M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"],["settings","M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1|M15 12a3 3 0 11-6 0 3 3 0 016 0z"]]
+    .map(([k,d])=>`<button class="nav ${page===k?"on":""}" data-page="${k}" ${page===k?'aria-current="page"':""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">${d.split("|").map(x=>`<path d="${x}"/>`).join("")}</svg>${t("nav_"+k)}${k==="alerts"?`<span class="badge" id="badge" hidden></span>`:""}</button>`).join("");
+  $("#content").innerHTML = {plants:pPlants,home:pHome,alerts:pAlerts,coach:pCoach,agent:pAgent,settings:pSettings}[page]();
+  setTimeout(()=>$("#mainnav .on")?.scrollIntoView({inline:"nearest", block:"nearest"}));   // keeps the current page visible in the phone top bar
+  $("#modal").innerHTML = pair ? pairModal() : modal?.type==="edit" ? editModal(S.plants.find(p=>p.id===modal.id)) : modal?.type==="share" ? shareModal() : "";
+  document.querySelectorAll(".quick [data-lang]").forEach(b=>{ b.classList.toggle("on",b.dataset.lang===S.lang); b.setAttribute("aria-pressed",b.dataset.lang===S.lang) });
+  const n=S.plants.filter(needsAttention).length; $("#badge").hidden=!n; $("#badge").textContent=n;
+  $("#sim-label").textContent=t("sim"); $("#b-day").textContent=t("day"); $("#b-live").textContent=live?t("pause"):t("live");
+  $("#clock").textContent=new Date(S.now).toLocaleString(LOCALE(),{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+  const chat=$("#chat"); if(chat) chat.scrollTop=chat.scrollHeight;
+  // focus: into a dialog that just opened; back to its opener when it closes; otherwise keep it where it was
+  const hasModal=!!(pair||modal); modalShown=hasModal;
+  if(hasModal && !hadModal){ opener=fk; const f=$("#modal").querySelector("input,select,textarea,button:not([data-close])"); f&&f.focus(); return }
+  const target = !hasModal && hadModal && opener ? opener : fk;
+  if(!hasModal && hadModal) opener=null;
+  const el = target && document.querySelector(target.a==="id"?"#"+CSS.escape(target.v):`[${target.a}="${CSS.escape(target.v)}"]`);
+  if(el){ el.focus({preventScroll:true}); if(target.pos!=null&&el.setSelectionRange) try{el.setSelectionRange(target.pos,target.pos)}catch(e){} }
+  else if(hasModal && !$("#modal").contains(document.activeElement)){ const f=$("#modal").querySelector("input,select,textarea,button:not([data-close])"); f&&f.focus() }   // dialog moved to a new step
+}
+let opener=null, modalShown=false;   // modalShown: whether the last render showed a dialog
+
+/* =========================================================
+   Events
+   ========================================================= */
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && (pair||modal)){ pair=null; modal=null; render() } });
+document.addEventListener("click",e=>{
+  const tgt=e.target.closest("button,[data-closebg]"); if(!tgt) return;
+  const d=tgt.dataset, P=id=>S.plants.find(p=>p.id===+id);
+  if(d.closebg!==undefined && e.target!==tgt) return;
+  if(d.page){ page=d.page; render(); $("#content").focus({preventScroll:true}); window.scrollTo(0,0) }
+  else if(d.open){ sel=+d.open; page="plants"; render() }
+  else if(d.water){ water(P(d.water)) }
+  else if(d.remove){ const p=P(d.remove); if(confirmTap("rm"+p.id)){ S.plants=S.plants.filter(x=>x!==p); save(); render() } }
+  else if(d.edit){ modal={type:"edit",id:+d.edit}; render() }
+  else if(d.esave){ const p=P(d.esave); p.name=$("#ename").value.trim()||p.name; p.room=$("#eroom").value.trim()||p.room; p.sp=$("#esp").value; p.notes=$("#enotes").value.trim(); modal=null; save(); render(); announce(t("save")+" ✓") }
+  else if(d.share){ modal={type:"share", ids:S.plants.map(p=>p.id), sitter:""}; render() }
+  else if(d.copy!==undefined){ const txt=sheetText(modal.ids, modal.sitter);
+    const done=()=>{ modal.copied=true; render(); setTimeout(()=>{ if(modal){ modal.copied=false; render() } },1500) };
+    if(navigator.clipboard) navigator.clipboard.writeText(txt).then(done,()=>{ selectPre(); }); else selectPre(); }
+  else if(d.dl!==undefined){ download(sheetHtml(modal.ids, modal.sitter), (S.lang==="pt"?"folha-de-cuidados":"plant-care-sheet")+".html", "text/html") }
+  else if(d.ask){ sel=+d.ask; page="coach"; render() }
+  else if(d.coach){ sel=+d.coach; render() }
+  else if(d.q){ ask(d.q) }
+  else if(d.photo!==undefined){ $("#photo").click() }
+  else if(d.range){ range=+d.range; render() }
+  else if(d.filter){ filter=d.filter; render() }
+  else if(d.clear!==undefined){ filter="all"; query=""; roomF=""; render() }
+  else if(d.goto){ page=d.goto; render(); window.scrollTo(0,0) }
+  else if(d.lang){ S.lang=d.lang; save(); render() }
+  else if(d.theme){ S.theme=d.theme; save(); render() }
+  else if(d.rate){ const [pid,i,v]=d.rate.split(":"), m=S.chats[pid][+i]; m.rating = m.rating===v ? null : v; save(); render() }
+  else if(d.premium!==undefined){ S.premium=!S.premium; save(); render() }
+  else if(d.aitoggle!==undefined){ S.ai.enabled=!S.ai.enabled; save(); render() }
+  else if(d.aitest!==undefined){ testAI() }
+  else if(d.csv!==undefined){ exportCsv() }
+  else if(d.reset!==undefined){ if(confirmTap("reset")){ const keep={lang:S.lang,theme:S.theme,ai:S.ai}; S={...fresh(),...keep}; sel=S.plants[0].id; filter="all"; query=""; roomF=""; save(); render() } }
+  else if(d.pair!==undefined){ pair={step:1}; render() }
+  else if(d.close!==undefined||d.closebg!==undefined){ pair=null; modal=null; render() }
+  else if(d.scan!==undefined){ pair={step:2,probe:"FS-"+(2042+S.nextId),q:"",sp:null}; render() }
+  else if(d.sp){ pair.sp=d.sp; render() }
+  else if(d.next!==undefined){ pair.step=3; render() }
+  else if(d.done!==undefined){
+    const s=SP[pair.sp], room=$("#proom").value, p={id:S.nextId++,probe:pair.probe,sp:s.id,name:$("#pname").value.trim()||s.common,room,m:+(s.m[0]+(s.m[1]-s.m[0])*.6).toFixed(1),t:/window|janela/.test(room)?15.5:21.2,batt:100,notes:""};
+    p.hist=backfill(p,30,S.now); S.plants.push(p); sel=p.id; pair=null; page="plants"; save(); render();
+  }
+});
+function selectPre(){ const el=$("#sharepre"); const r=document.createRange(); r.selectNodeContents(el); const s=getSelection(); s.removeAllRanges(); s.addRange(r) }
+document.addEventListener("input",e=>{
+  const id=e.target.id;
+  if(id==="spq"){ pair.q=e.target.value; render() }
+  else if(id==="q"){ query=e.target.value; render() }
+  else if(id==="aikey"){ apiKey=e.target.value.trim(); saveKey(); aiTest="" }
+  else if(id==="sitter"){ modal.sitter=e.target.value; $("#sharepre").textContent=sheetText(modal.ids, modal.sitter) }
+});
+document.addEventListener("change",e=>{
+  const id=e.target.id, d=e.target.dataset;
+  if(id==="roomF"){ roomF=e.target.value; render() }
+  else if(id==="sortSel"){ sort=e.target.value; render() }
+  else if(id==="airemember"){ S.ai.remember=e.target.checked; save(); saveKey() }
+  else if(d.shareid){ const i=+d.shareid; modal.ids = e.target.checked ? [...modal.ids,i] : modal.ids.filter(x=>x!==i); $("#sharepre").textContent=sheetText(modal.ids, modal.sitter) }
+  else if(id==="photo"){ const f=e.target.files[0]; e.target.value=""; if(f) askPhoto(f) }
+});
+document.addEventListener("submit",e=>{ if(e.target.id==="askf"){ e.preventDefault(); const q=e.target.q.value.trim(); if(q) ask(q) } });
+function exportCsv(){
+  const rows=[t("exp_headers"),...S.plants.map(p=>[p.name,SP[p.sp].name,p.room,p.probe,p.m,p.t,stLabel(p),p.notes||""])];
+  download(rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n"), "florasense-export.csv", "text/csv");
+}
+
+/* =========================================================
+   AI Coach: local rules, or Claude when the user turns it on
+   ========================================================= */
+async function ask(q){
+  const p=S.plants.find(x=>x.id===sel); if(!p||busy) return;
+  const chat=(S.chats[p.id] ||= []);
+  chat.push({me:true,text:q});
+  if(!aiOn()){ chat.push({me:false,text:coachAnswer(p,q,S.lang),via:"local"}); save(); render(); focusAsk(); return }
+  busy=true; save(); render();
+  try{ chat.push({me:false,text:await claudeAnswer(p,q,null),via:"ai"}) }
+  catch(err){ chat.push({me:false,text:t("ai_error",{e:errText(err)})+"\n\n"+coachAnswer(p,q,S.lang),via:"local"}) }
+  busy=false; save(); render(); focusAsk();
+}
+async function askPhoto(file){
+  const p=S.plants.find(x=>x.id===sel); if(!p||busy) return;
+  const {full, thumb} = await readImage(file);
+  const chat=(S.chats[p.id] ||= []);
+  chat.push({me:true,text:t("photo_q"),img:thumb});
+  if(!aiOn()){ chat.push({me:false,text:t("photo_needs_ai"),sys:true}); save(); render(); return }
+  busy=true; save(); render();
+  try{ chat.push({me:false,text:await claudeAnswer(p,t("photo_q"),full),via:"ai"}) }
+  catch(err){ chat.push({me:false,text:t("ai_error",{e:errText(err)}),sys:true}) }
+  busy=false; save(); render();
+}
+function focusAsk(){ const i=$("#askq"); i&&i.focus() }
+/* ---------- simulator buttons ---------- */
+let live=null;
+$("#b-tick").onclick=()=>tick(6);
+$("#b-day").onclick=()=>{ for(let i=0;i<4;i++) tick(6) };
+$("#b-live").onclick=()=>{ if(live){clearInterval(live);live=null} else {live=setInterval(()=>tick(6),2500)} render() };
+render();
+</script>
+</body>
+</html>
