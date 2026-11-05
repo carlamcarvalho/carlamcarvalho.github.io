@@ -180,3 +180,9 @@
   .title-row h1 { margin: 0; }
   .tags.small { margin-top: 12px; gap: 6px; }
   .tags.small .tag { font-size: 12px; padding: 2px 8px; background: var(--bg); }
+  /* Company logos */
+  .entry h3.co { display: flex; align-items: center; gap: 8px; }
+  .co-logo { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
+  .co-wordmark { height: 16px; width: auto; display: block; margin: 3px 0; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .co-wordmark { filter: invert(1) hue-rotate(180deg); } }
+  :root[data-theme="dark"] .co-wordmark { filter: invert(1) hue-rotate(180deg); }
